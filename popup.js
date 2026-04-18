@@ -42,11 +42,16 @@
   syncBtn.addEventListener('click', () => {
     hideError();
     setSyncing(true);
-    browser.runtime.sendMessage({ action: 'startSync' }).then(resp => {
-      if (resp && resp.error === 'already_syncing') {
-        // Already running — UI will update via port messages
-      }
-    });
+    browser.runtime.sendMessage({ action: 'startSync' })
+      .then(resp => {
+        if (resp && resp.error === 'already_syncing') {
+          // Already running — UI will update via port messages
+        }
+      })
+      .catch(err => {
+        showError('Could not start sync: ' + err.message);
+        resetSyncButton();
+      });
   });
 
   downloadBtn.addEventListener('click', () => {

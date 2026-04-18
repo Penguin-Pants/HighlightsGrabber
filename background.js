@@ -81,21 +81,26 @@ browser.runtime.onMessage.addListener((msg, sender) => {
 async function startSync() {
   syncStatus = { syncing: true, current: 0, total: 0, bookTitle: '' };
 
-  const stored = await browser.storage.local.get(STORAGE_KEY);
-  const existingData = stored[STORAGE_KEY] || null;
+  try {
+    const stored = await browser.storage.local.get(STORAGE_KEY);
+    const existingData = stored[STORAGE_KEY] || null;
 
-  const tabs = await browser.tabs.query({ url: NOTEBOOK_URL + '*' });
+    const tabs = await browser.tabs.query({ url: NOTEBOOK_URL + '*' });
 
-  if (tabs.length > 0) {
-    const tab = tabs[0];
-    await browser.tabs.update(tab.id, { active: true });
-    await sleep(500);
-    await sendScrapeMessage(tab.id, existingData);
-  } else {
-    const tab = await browser.tabs.create({ url: NOTEBOOK_URL });
-    await waitForTabLoad(tab.id);
-    await sleep(2500); // extra time for React SPA to initialise
-    await sendScrapeMessage(tab.id, existingData);
+    if (tabs.length > 0) {
+      const tab = tabs[0];
+      await browser.tabs.update(tab.id, { active: true });
+      await sleep(500);
+      await sendScrapeMessage(tab.id, existingData);
+    } else {
+      const tab = await browser.tabs.create({ url: NOTEBOOK_URL });
+      await waitForTabLoad(tab.id);
+      await sleep(2500); // extra time for React SPA to initialise
+      await sendScrapeMessage(tab.id, existingData);
+    }
+  } catch (err) {
+    syncStatus.syncing = false;
+    pushToPopup({ action: 'syncError', message: 'Sync failed: ' + err.message });
   }
 }
 
@@ -116,10 +121,16 @@ async function sendScrapeMessage(tabId, existingData) {
   }
 }
 
-function waitForTabLoad(tabId) {
-  return new Promise(resolve => {
+function waitForTabLoad(tabId, timeout = 30000) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      browser.tabs.onUpdated.removeListener(listener);
+      reject(new Error('Timed out waiting for Kindle tab to load'));
+    }, timeout);
+
     function listener(id, changeInfo) {
       if (id === tabId && changeInfo.status === 'complete') {
+        clearTimeout(timer);
         browser.tabs.onUpdated.removeListener(listener);
         resolve();
       }
@@ -179,6 +190,9 @@ async function downloadJSON() {
     filename: `kindle-highlights-${date}.json`,
     saveAs:   false
   });
+
+  // Revoke the object URL shortly after triggering the download
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
 // ---------------------------------------------------------------------------

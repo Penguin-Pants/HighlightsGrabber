@@ -1,8 +1,7 @@
 if (window.__highlightsGrabberLoaded) {
-  // Already running — re-register listener is handled below
+  // Already injected — do not register a second listener
 } else {
   window.__highlightsGrabberLoaded = true;
-}
 
 (function () {
   const log = (...a) => console.log('[HighlightsGrabber]', ...a);
@@ -216,9 +215,8 @@ if (window.__highlightsGrabberLoaded) {
     }
 
     // Wait for the book list to appear
-    let firstBook;
     try {
-      firstBook = await waitFor(SEL.bookItem, 15000);
+      await waitFor(SEL.bookItem, 15000);
     } catch (_) {
       browser.runtime.sendMessage({
         action: 'error',
@@ -308,3 +306,5 @@ if (window.__highlightsGrabberLoaded) {
 
   log('Content script loaded on', location.href);
 })();
+
+} // end double-injection guard
