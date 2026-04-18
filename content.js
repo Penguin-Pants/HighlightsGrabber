@@ -175,16 +175,49 @@ if (window.__highlightsGrabberLoaded) {
   // (handles lazy / infinite-scroll loading)
   // ---------------------------------------------------------------------------
 
-  async function scrapeCurrentBook() {
-    // Wait for at least one highlight card, or give up after 8 s
-    try {
-      await waitFor(SEL.highlightCard, 8000);
-    } catch (_) {
-      log('No highlight cards found — book may have no highlights');
-      return [];
-    }
+  // Returns a short string fingerprinting the first visible highlight card,
+  // used to detect when the panel has switched to a different book.
+  function panelFingerprint() {
+    const cards = qAll(SEL.highlightCard);
+    if (!cards.length) return null;
+    const textEl = q(SEL.highlightText, cards[0]);
+    return (textEl ? textEl.textContent : cards[0].textContent).trim().slice(0, 80);
+  }
 
-    // Scroll to load all highlights
+  // Waits until the highlights panel shows content that differs from
+  // prevFingerprint, meaning the panel has actually switched to the new book.
+  function waitForPanelChange(prevFingerprint, timeout = 12000) {
+    return new Promise(resolve => {
+      // No previous content — just wait for first card to appear
+      if (prevFingerprint === null) {
+        waitFor(SEL.highlightCard, timeout).then(resolve).catch(resolve);
+        return;
+      }
+
+      const timer = setTimeout(() => {
+        obs.disconnect();
+        resolve();
+      }, timeout);
+
+      const check = () => {
+        const cards = qAll(SEL.highlightCard);
+        if (!cards.length) return; // panel cleared but new content not yet present — keep waiting
+        const fp = (q(SEL.highlightText, cards[0]) || cards[0]).textContent.trim().slice(0, 80);
+        if (fp !== prevFingerprint) {
+          clearTimeout(timer);
+          obs.disconnect();
+          resolve();
+        }
+      };
+
+      const obs = new MutationObserver(check);
+      obs.observe(document.body, { childList: true, subtree: true });
+      check(); // handle case where panel already changed during the click
+    });
+  }
+
+  async function scrapeCurrentBook() {
+    // Scroll to trigger lazy loading, stopping when no new cards appear
     const pane = q(SEL.highlightsPane);
     if (pane) {
       let prev = 0;
@@ -195,6 +228,8 @@ if (window.__highlightsGrabberLoaded) {
         if (count === prev) break;
         prev = count;
       }
+    } else {
+      await sleep(800);
     }
 
     await sleep(300);
@@ -273,8 +308,12 @@ if (window.__highlightsGrabberLoaded) {
       }
 
       log(`Scraping "${title}" (${isNaN(highlightCountUI) ? '?' : highlightCountUI} highlights)`);
+
+      // Capture current panel state BEFORE clicking so we can detect when
+      // the panel actually switches to the new book's highlights
+      const fp = panelFingerprint();
       el.click();
-      await sleep(1200); // let React re-render
+      await waitForPanelChange(fp);
 
       const highlights = await scrapeCurrentBook();
       log(`  → ${highlights.length} highlights`);
