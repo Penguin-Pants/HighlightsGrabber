@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HighlightsGrabber</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+
+    <header>
+      <img src="icons/icon-48.png" alt="" class="logo">
+      <h1>HighlightsGrabber</h1>
+    </header>
+
+    <!-- Idle: no data yet -->
+    <div id="no-data" class="status-block">
+      <p class="muted">No highlights synced yet.</p>
+    </div>
+
+    <!-- Idle: data exists -->
+    <div id="has-data" class="status-block hidden">
+      <div class="stat-row">
+        <span class="label">Books</span>
+        <span id="book-count" class="value">0</span>
+      </div>
+      <div class="stat-row">
+        <span class="label">Highlights</span>
+        <span id="highlight-count" class="value">0</span>
+      </div>
+      <div class="stat-row">
+        <span class="label">Last synced</span>
+        <span id="last-synced" class="value">—</span>
+      </div>
+    </div>
+
+    <!-- In-progress -->
+    <div id="progress-section" class="hidden">
+      <div class="progress-bar-track">
+        <div id="progress-fill" class="progress-bar-fill"></div>
+      </div>
+      <p id="progress-text" class="progress-text">Starting…</p>
+    </div>
+
+    <!-- Error -->
+    <div id="error-section" class="hidden">
+      <p id="error-text" class="error-text"></p>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button id="sync-btn" class="btn btn-primary">Sync Highlights</button>
+      <button id="download-btn" class="btn btn-secondary hidden">Download JSON</button>
+    </div>
+
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

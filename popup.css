@@ -1,0 +1,157 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 13px;
+  background: #fff;
+  color: #1a1a1a;
+  min-width: 280px;
+}
+
+.container {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Header */
+header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid #e8e8e8;
+  padding-bottom: 12px;
+}
+
+.logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+}
+
+h1 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+  letter-spacing: -0.2px;
+}
+
+/* Status blocks */
+.status-block {
+  background: #f7f7f7;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.muted {
+  color: #888;
+  text-align: center;
+  padding: 4px 0;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 0;
+}
+
+.stat-row + .stat-row {
+  border-top: 1px solid #ebebeb;
+  margin-top: 4px;
+  padding-top: 7px;
+}
+
+.label {
+  color: #666;
+}
+
+.value {
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+/* Progress */
+.progress-bar-track {
+  background: #e8e8e8;
+  border-radius: 6px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  background: #ff9900;
+  height: 100%;
+  width: 0%;
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  margin-top: 7px;
+  color: #555;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Error */
+.error-text {
+  color: #c0392b;
+  font-size: 12px;
+  background: #fdf0ee;
+  border-radius: 6px;
+  padding: 10px 12px;
+  line-height: 1.4;
+}
+
+/* Buttons */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.btn {
+  width: 100%;
+  padding: 9px 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: #ff9900;
+  color: #fff;
+}
+
+.btn-primary:not(:disabled):hover {
+  background: #e68a00;
+}
+
+.btn-secondary {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.btn-secondary:not(:disabled):hover {
+  background: #e2e2e2;
+}
+
+.hidden {
+  display: none !important;
+}

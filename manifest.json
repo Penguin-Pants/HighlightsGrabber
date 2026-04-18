@@ -1,0 +1,36 @@
+{
+  "manifest_version": 2,
+  "name": "HighlightsGrabber",
+  "version": "1.0.0",
+  "description": "Scrape your Kindle highlights from read.amazon.com/notebook and save them to JSON",
+  "permissions": [
+    "storage",
+    "downloads",
+    "notifications",
+    "tabs",
+    "https://read.amazon.com/*"
+  ],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": true
+  },
+  "browser_action": {
+    "default_popup": "popup.html",
+    "default_title": "HighlightsGrabber",
+    "default_icon": {
+      "48": "icons/icon-48.png",
+      "96": "icons/icon-96.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://read.amazon.com/notebook*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "48": "icons/icon-48.png",
+    "96": "icons/icon-96.png"
+  }
+}
