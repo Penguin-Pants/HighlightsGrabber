@@ -21,27 +21,36 @@ if (window.__highlightsGrabberLoaded) {
       '#kp-notebook-annotations-pane li[data-asin]',
       '#kp-notebook-annotations-pane li'
     ],
+    // The actual clickable link inside each sidebar book item
+    bookItemLink: [
+      'a.kp-notebook-searchable-item-name',
+      'a[href]',
+      'a'
+    ],
     bookTitle: [
       '.kp-notebook-searchable-item-name',
       'h2.a-size-base',
       'h2',
       '.a-text-bold'
     ],
-    bookAuthor: [
-      '.kp-notebook-searchable-item-author',
-      '.a-size-small.a-color-secondary',
-      '.a-size-small'
-    ],
-    highlightCount: [
-      '.kp-notebook-library-book-count',
-      '.a-badge-count',
-      '.a-size-small.a-color-secondary.kp-notebook-library-book-count'
-    ],
     // Right-hand highlights panel
     highlightsPane: [
       '#kp-notebook-highlights-pane',
       '.kp-notebook-annotations-pane-right',
       '#annotations'
+    ],
+    // Book metadata shown in the right panel header (populated after clicking a book)
+    panelAuthor: [
+      '#kp-notebook-highlights-pane .a-profile-name',
+      '#kp-notebook-highlights-pane h2 + p',
+      '#kp-notebook-highlights-pane .a-size-base.a-color-secondary',
+      '#kp-notebook-highlights-pane .a-size-small.a-color-secondary',
+      '.kp-notebook-annotations-pane-right .a-size-small.a-color-secondary'
+    ],
+    panelHighlightCount: [
+      '#kp-notebook-highlights-pane .kp-notebook-library-book-count',
+      '#kp-notebook-highlights-pane .a-badge-count',
+      '.kp-notebook-annotations-pane-right .kp-notebook-library-book-count'
     ],
     // Individual highlight containers in the right panel
     highlightCard: [
@@ -111,6 +120,25 @@ if (window.__highlightsGrabberLoaded) {
       });
       obs.observe(document.body, { childList: true, subtree: true });
     });
+  }
+
+  // Click the inner <a> link within a sidebar book item so React's event
+  // handler fires. Clicking the outer container is not enough on Amazon's SPA.
+  function clickBook(el) {
+    const link = q(SEL.bookItemLink, el) || el;
+    link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+  }
+
+  // Read author and highlight count from the right panel header.
+  // These are NOT present in the sidebar items — they only appear in the
+  // panel after a book has been selected.
+  function scrapePanelMeta() {
+    const authorEl = q(SEL.panelAuthor);
+    const countEl  = q(SEL.panelHighlightCount);
+    const author   = authorEl ? authorEl.textContent.trim() : 'Unknown Author';
+    const countRaw = countEl  ? countEl.textContent.trim()  : '';
+    const count    = parseInt(countRaw.replace(/\D/g, ''), 10);
+    return { author, highlightCountUI: isNaN(count) ? -1 : count };
   }
 
   function extractColor(el) {
@@ -276,21 +304,15 @@ if (window.__highlightsGrabberLoaded) {
     for (let i = 0; i < bookEls.length; i++) {
       const el = bookEls[i];
 
+      // Title and cover are reliably in the sidebar item
       const titleEl  = q(SEL.bookTitle, el);
-      const authorEl = q(SEL.bookAuthor, el);
       const coverEl  = el.querySelector('img');
-      const countEl  = q(SEL.highlightCount, el);
-
-      const title    = titleEl  ? titleEl.textContent.trim()  : 'Unknown Title';
-      const author   = authorEl ? authorEl.textContent.trim() : 'Unknown Author';
-      const coverUrl = coverEl  ? coverEl.src                 : null;
+      const title    = titleEl ? titleEl.textContent.trim() : 'Unknown Title';
+      const coverUrl = coverEl ? coverEl.src                : null;
       const asin     = el.getAttribute('data-asin') ||
                        el.getAttribute('data-book-asin') ||
                        el.id ||
                        `book-${i}`;
-
-      const countText       = countEl ? countEl.textContent.trim() : '';
-      const highlightCountUI = parseInt(countText.replace(/\D/g, ''), 10);
 
       browser.runtime.sendMessage({
         action: 'progress',
@@ -299,21 +321,25 @@ if (window.__highlightsGrabberLoaded) {
         bookTitle: title
       });
 
-      // Incremental check: skip if highlight count unchanged
+      // Click the inner link so React's event handler fires, then wait for
+      // the right panel to actually switch to this book's content
+      const fp = panelFingerprint();
+      clickBook(el);
+      await waitForPanelChange(fp);
+
+      // Author and highlight count live in the right panel header, not the
+      // sidebar — read them now that the panel has loaded this book
+      const { author, highlightCountUI } = scrapePanelMeta();
+
+      // Incremental check: skip if highlight count matches what we stored
       const prev = stored[asin];
-      if (prev && !isNaN(highlightCountUI) && prev.highlightCount === highlightCountUI) {
+      if (prev && highlightCountUI >= 0 && prev.highlightCount === highlightCountUI) {
         log(`Skipping "${title}" — count unchanged (${highlightCountUI})`);
         books.push(prev);
         continue;
       }
 
-      log(`Scraping "${title}" (${isNaN(highlightCountUI) ? '?' : highlightCountUI} highlights)`);
-
-      // Capture current panel state BEFORE clicking so we can detect when
-      // the panel actually switches to the new book's highlights
-      const fp = panelFingerprint();
-      el.click();
-      await waitForPanelChange(fp);
+      log(`Scraping "${title}" by ${author} (${highlightCountUI < 0 ? '?' : highlightCountUI} highlights)`);
 
       const highlights = await scrapeCurrentBook();
       log(`  → ${highlights.length} highlights`);
