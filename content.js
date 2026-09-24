@@ -236,15 +236,18 @@ if (window.__highlightsGrabberLoaded) {
   async function scrapeCurrentBook() {
     if (document.querySelector(SEL.emptyBook)) {
       log('  Book has no highlights');
-      return { highlights: [], complete: true, expected: null, limited: false };
+      return { highlights: [], loaded: 0, complete: true, expected: null, limited: false };
     }
 
     // Wait for first batch of highlight rows
     try {
       await waitForEl(SEL.highlightRow, 8000);
     } catch (_) {
-      log('  No highlight rows found after waiting');
-      return { highlights: [], complete: true, expected: null, limited: false };
+      // Incomplete if Amazon says the book has highlights
+      const pane  = document.querySelector(SEL.annotationsPane) || document;
+      const count = readHighlightCount(pane);
+      log(`  No highlight rows found after waiting (Amazon shows ${count === null ? 'no count' : count})`);
+      return { highlights: [], loaded: 0, complete: !count, expected: count, limited: isExportLimited(pane) };
     }
 
     const pane     = document.querySelector(SEL.annotationsPane) || document;
@@ -257,7 +260,7 @@ if (window.__highlightsGrabberLoaded) {
     const byId = new Map();
     const highlightRows = new Set(); // includes rows Amazon cannot display
     let pageLoaded = true;
-    const result = complete => ({ highlights: [...byId.values()], complete, expected, limited });
+    const result = complete => ({ highlights: [...byId.values()], loaded: highlightRows.size, complete, expected, limited });
 
     for (let page = 1; ; page++) {
       const before = byId.size;
@@ -375,17 +378,18 @@ if (window.__highlightsGrabberLoaded) {
 
       log(`Scraping "${finalTitle}" by ${author} (ASIN: ${asin})`);
 
-      const { highlights, complete, expected, limited } = await scrapeCurrentBook();
+      const { highlights, loaded, complete, expected, limited } = await scrapeCurrentBook();
       log(`  → ${highlights.length} highlights total${complete ? '' : ' (may be incomplete)'}`);
 
       if (!complete) {
-        warnings.incompleteBooks.push(expected === null ? finalTitle : `${finalTitle} (${highlights.length} of ${expected})`);
+        // Rows loaded, including image highlights that are not exported
+        warnings.incompleteBooks.push(expected === null ? finalTitle : `${finalTitle} (${loaded} of ${expected})`);
       }
       if (limited) warnings.limitedBooks.push(finalTitle);
 
       // Books without highlights are left out of the file
       if (!highlights.length) {
-        warnings.emptyBooks++;
+        if (complete) warnings.emptyBooks++;
         continue;
       }
 
