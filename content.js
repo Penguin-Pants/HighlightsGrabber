@@ -155,20 +155,18 @@ if (window.__highlightsGrabberLoaded) {
 
   // ---------------------------------------------------------------------------
   // Load every book into the sidebar. Amazon may load the library in pages
-  // when you scroll. The next-page token is not always kept on the live page,
-  // so scroll once to check even without it.
-  // Returns false if Amazon still reports more books when we stop.
+  // when you scroll; a non-empty next-page token means more books exist.
+  // Returns false if books are still missing.
   // ---------------------------------------------------------------------------
 
   async function loadFullLibrary() {
     const library = document.querySelector(SEL.library);
     for (let i = 0; i < MAX_PAGES; i++) {
-      const more  = hasMorePages(library, PSEL.libraryNextToken);
+      if (!hasMorePages(library, PSEL.libraryNextToken)) return true;
       const books = qAll(SEL.bookItem);
-      if (!books.length) return !more;
+      if (!books.length) return false;
       books[books.length - 1].scrollIntoView({ block: 'end' });
-      const grew = await waitUntil(() => qAll(SEL.bookItem).length > books.length, more ? 8000 : 3000);
-      if (!grew) return !more;
+      if (!(await waitUntil(() => qAll(SEL.bookItem).length > books.length, 8000))) return false;
       await sleep(500);
     }
     return false;
