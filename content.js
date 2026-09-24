@@ -5,7 +5,7 @@ if (window.__highlightsGrabberLoaded) {
 
 (function () {
   const log = (...a) => console.log('[HighlightsGrabber]', ...a);
-  const { parseRow, hasMorePages, readHighlightCount, isExportLimited } = HighlightsGrabberParse;
+  const { parseRow, hasMorePages, readHighlightCount, isExportLimited, makeId, readLocation } = HighlightsGrabberParse;
   const PSEL = HighlightsGrabberParse.SEL;
 
   // ---------------------------------------------------------------------------
@@ -265,9 +265,13 @@ if (window.__highlightsGrabberLoaded) {
       const before = byId.size;
       const rowsBefore = highlightRows.size;
       for (const row of qAll(SEL.highlightRow)) {
-        if (row.querySelector(PSEL.highlightBox)) highlightRows.add(row.id || row.textContent.trim().slice(0, 200));
         const h = parseRow(row);
         if (h && !byId.has(h.id)) byId.set(h.id, h);
+        // Same identity as the exported id; rows without text (images) use
+        // the full row text and location
+        if (row.querySelector(PSEL.highlightBox)) {
+          highlightRows.add(h ? h.id : (row.id || makeId(row.textContent.trim(), readLocation(row))));
+        }
       }
       log(`  Page ${page}: +${byId.size - before} highlights (${byId.size} total` +
           (expected === null ? ')' : `, Amazon shows ${expected})`));
