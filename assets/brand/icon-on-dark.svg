@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <title>HighlightsGrabber</title>
+  <path d="M32 8H96a8 8 0 0 1 8 8V120L64 96 24 120V16a8 8 0 0 1 8-8Z" fill="#F4EFE4"/>
+  <path d="M56 24H72V48H88L64 72 40 48H56Z" fill="#0E5A57"/>
+</svg>

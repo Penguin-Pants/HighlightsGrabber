@@ -14,6 +14,8 @@
   const errorText     = document.getElementById('error-text');
   const syncBtn       = document.getElementById('sync-btn');
   const downloadBtn   = document.getElementById('download-btn');
+  const warningText   = document.getElementById('warning-text');
+  const savedText     = document.getElementById('saved-text');
 
   // ---------------------------------------------------------------------------
   // Long-lived port for push messages from background
@@ -27,6 +29,8 @@
         break;
       case 'syncComplete':
         showSummary(msg.summary);
+        showWarning(msg.warning);
+        showDownload(msg.download);
         resetSyncButton();
         break;
       case 'syncError':
@@ -41,13 +45,10 @@
   // ---------------------------------------------------------------------------
   syncBtn.addEventListener('click', () => {
     hideError();
+    showWarning(null);
+    savedText.classList.add('hidden');
     setSyncing(true);
     browser.runtime.sendMessage({ action: 'startSync' })
-      .then(resp => {
-        if (resp && resp.error === 'already_syncing') {
-          // Already running — UI will update via port messages
-        }
-      })
       .catch(err => {
         showError('Could not start sync: ' + err.message);
         resetSyncButton();
@@ -55,7 +56,9 @@
   });
 
   downloadBtn.addEventListener('click', () => {
-    browser.runtime.sendMessage({ action: 'downloadJSON' });
+    browser.runtime.sendMessage({ action: 'downloadJSON' })
+      .then(showDownload)
+      .catch(err => showDownload({ ok: false, error: err.message }));
   });
 
   // ---------------------------------------------------------------------------
@@ -67,13 +70,19 @@
       setSyncing(true);
       const s = resp.syncStatus;
       showProgress(s.current, s.total, s.bookTitle);
-    } else if (resp.data) {
+      return;
+    }
+    if (resp.data) {
       showSummary({
         totalBooks:      resp.data.totalBooks,
         totalHighlights: resp.data.totalHighlights,
         lastUpdated:     resp.data.lastUpdated
       });
     }
+    const s = resp.syncStatus;
+    if (s.lastError) showError(s.lastError);
+    showWarning(s.lastWarning);
+    if (s.lastFilename && !s.lastError) showDownload({ ok: true, filename: s.lastFilename });
   });
 
   // ---------------------------------------------------------------------------
@@ -114,6 +123,18 @@
   function showError(msg) {
     errorSec.classList.remove('hidden');
     errorText.textContent = msg;
+  }
+
+  function showWarning(msg) {
+    warningText.textContent = msg || '';
+    warningText.classList.toggle('hidden', !msg);
+  }
+
+  function showDownload(result) {
+    if (!result) return;
+    savedText.textContent = result.ok ? `Saved ${result.filename}` : `Download failed: ${result.error}`;
+    savedText.classList.toggle('error', !result.ok);
+    savedText.classList.remove('hidden');
   }
 
   function hideError() {

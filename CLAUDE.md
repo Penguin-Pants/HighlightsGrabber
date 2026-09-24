@@ -47,7 +47,7 @@ The JSON file is uploaded manually by the user after running the Firefox extensi
 | Field | Type | Description |
 |---|---|---|
 | `asin` | string | Amazon ASIN (unique book ID). Reliable for books purchased on Amazon. May be `"book-0"`, `"book-1"` etc. if ASIN couldn't be scraped |
-| `title` | string | Book title. Falls back to `"Unknown Title"` if not found |
+| `title` | string | Book title from the notebook panel, then from the library list. Falls back to `"Unknown Title"` if not found |
 | `author` | string | Author name. Falls back to `"Unknown Author"` if not found |
 | `coverUrl` | string \| null | Absolute URL to cover image from Amazon's CDN. May be null |
 | `highlightCount` | number | Count of highlights in the `highlights` array |
@@ -71,10 +71,10 @@ The JSON file is uploaded manually by the user after running the Firefox extensi
 
 | Field | Type | Description |
 |---|---|---|
-| `id` | string | Unique identifier. Either Amazon's annotation ID, the element's DOM id, or a hash of text+location. Stable across syncs for the same highlight |
+| `id` | string | Unique identifier. Amazon's annotation ID (the row's DOM id), or a hash of text+location. Stable across syncs for the same highlight |
 | `text` | string | The highlighted passage. Always present and non-empty |
 | `note` | string \| null | User's personal note attached to the highlight. `null` if no note was written |
-| `location` | string | Amazon location string e.g. `"Location 1234"` or `"Page 42"`. May be empty string if not found |
+| `location` | string | Amazon's location label, e.g. `"Location 1,234"` (with thousands separator) or `"Page 42"`. May be empty string if not found |
 | `color` | `"yellow"` \| `"pink"` \| `"blue"` \| `"orange"` | Highlight colour. Defaults to `"yellow"` if colour could not be detected |
 | `createdDate` | null | Always null — Amazon does not expose highlight timestamps in the notebook UI |
 
@@ -86,8 +86,9 @@ The JSON file is uploaded manually by the user after running the Firefox extensi
 - **`color` may not be accurate** — it's inferred from CSS class names which Amazon can change. Treat it as best-effort.
 - **`coverUrl` can be null or a dead link** — Amazon CDN URLs can expire. Handle gracefully (fallback to no image).
 - **`asin` may be a fallback string** — if it looks like `"book-0"`, Amazon's ASIN wasn't available. Still usable as a unique key within the file.
-- **Books with zero highlights** — books the user has opened but not highlighted will not appear in the file at all (they would have been skipped during scraping).
-- **Incremental syncs** — on subsequent syncs, books whose highlight count hasn't changed are carried forward unchanged. Only books with new highlights are re-scraped. This means the `highlights` array for an unchanged book reflects the state from its `lastSynced` date, not the current sync date.
+- **Books with zero highlights** — books without any highlight text are left out of the file. Notes without a highlight, and highlights Amazon cannot display (images, tables), are not exported.
+- **Full syncs** — every sync re-reads every book. `lastSynced` is the same sync time for every book in the file.
+- **Export limits** — Amazon hides or truncates some highlights for some publishers. The file contains only what Amazon shows in the notebook.
 
 ---
 
