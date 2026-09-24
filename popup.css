@@ -31,7 +31,6 @@ header {
 .logo {
   width: 28px;
   height: 28px;
-  border-radius: 4px;
 }
 
 h1 {
@@ -85,7 +84,7 @@ h1 {
 }
 
 .progress-bar-fill {
-  background: #ff9900;
+  background: #e9a23b;
   height: 100%;
   width: 0%;
   border-radius: 6px;
@@ -111,6 +110,26 @@ h1 {
   line-height: 1.4;
 }
 
+/* Warning and download result */
+.warning-text {
+  color: #6b4a00;
+  font-size: 12px;
+  background: #fbf1dc;
+  border-radius: 6px;
+  padding: 10px 12px;
+  line-height: 1.4;
+}
+
+.saved-text {
+  color: #0e5a57;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.saved-text.error {
+  color: #c0392b;
+}
+
 /* Buttons */
 .actions {
   display: flex;
@@ -129,18 +148,23 @@ h1 {
   transition: opacity 0.15s, background 0.15s;
 }
 
+.btn:focus-visible {
+  outline: 2px solid #e9a23b;
+  outline-offset: 2px;
+}
+
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
 .btn-primary {
-  background: #ff9900;
+  background: #0e5a57;
   color: #fff;
 }
 
 .btn-primary:not(:disabled):hover {
-  background: #e68a00;
+  background: #0a4744;
 }
 
 .btn-secondary {

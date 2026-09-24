@@ -1,0 +1,65 @@
+<!-- Synthetic markup with placeholder text. Structure follows the read.amazon.com/notebook
+     capture in github.com/JCrossman/kindle-mcp tests/fixtures (MIT), Sep 2026. -->
+<div id="kp-notebook-annotations-pane">
+  <h3 class="a-spacing-top-small a-color-base kp-notebook-selectable kp-notebook-metadata">Example Book</h3>
+  <p class="a-spacing-none a-spacing-top-micro a-size-base a-color-secondary kp-notebook-selectable kp-notebook-metadata">Example Author</p>
+  <input type="hidden" id="kp-notebook-asin" value="B0EXAMPLE1">
+  <div id="kp-notebook-annotations" class="a-row">
+    <input type="hidden" class="kp-notebook-content-limit-state" value="STATE">
+    <input type="hidden" class="kp-notebook-annotations-next-page-start" value="TOKEN1">
+
+    <!-- Page-based highlight, no note -->
+    <div class="a-row a-spacing-base" id="ROW-PAGE">
+      <div class="a-row">
+        <input type="hidden" id="kp-annotation-location" value="31">
+        <span id="annotationHighlightHeader" class="kp-notebook-metadata">Yellow highlight | Page: 7</span>
+        <span id="annotationNoteHeader" class="aok-hidden kp-notebook-metadata">Note | Page: 7</span>
+      </div>
+      <div class="a-row kp-notebook-highlight kp-notebook-selectable kp-notebook-highlight-yellow">
+        <span id="highlight">Placeholder “quoted” text — with Unicode: café, 日本語.</span>
+      </div>
+      <div class="a-row a-spacing-top-base kp-notebook-note aok-hidden"><span id="note"> </span></div>
+    </div>
+
+    <!-- Location-based highlight with a note -->
+    <div class="a-row a-spacing-base" id="ROW-LOC">
+      <div class="a-row">
+        <input type="hidden" id="kp-annotation-location" value="1693">
+        <span id="annotationHighlightHeader" class="kp-notebook-metadata">Orange highlight | Location: 1,693</span>
+      </div>
+      <div class="a-row kp-notebook-highlight kp-notebook-highlight-orange">
+        <span id="highlight">Second placeholder highlight.</span>
+      </div>
+      <div class="a-row kp-notebook-note"><span id="note">Placeholder note.</span></div>
+    </div>
+
+    <!-- No header: location comes from the hidden input -->
+    <div class="a-row a-spacing-base" id="ROW-INPUT">
+      <input type="hidden" id="kp-annotation-location" value="31">
+      <div class="a-row kp-notebook-highlight kp-notebook-highlight-blue">
+        <span id="highlight">Third placeholder highlight.</span>
+      </div>
+    </div>
+
+    <!-- Freestanding note: no highlight text -->
+    <div class="a-row a-spacing-base" id="ROW-NOTE-ONLY">
+      <input type="hidden" id="kp-annotation-location" value="3305">
+      <span id="annotationNoteHeader" class="kp-notebook-metadata">Note | Location: 3,305</span>
+      <span id="note">Freestanding note.</span>
+    </div>
+
+    <!-- Highlight Amazon cannot display (image or table) -->
+    <div class="a-row a-spacing-base" id="ROW-IMAGE">
+      <span id="annotationHighlightHeader" class="kp-notebook-metadata">Orange highlight | Location: 1,901</span>
+      <div class="a-row kp-notebook-highlight kp-notebook-highlight-orange">
+        <div class="a-box kp-notebook-highlight-empty-text"><div class="a-alert-content">Sorry, we’re unable to display this type of content.</div></div>
+      </div>
+    </div>
+
+    <!-- Row without an id -->
+    <div class="a-row a-spacing-base">
+      <span id="annotationHighlightHeader" class="kp-notebook-metadata">Pink highlight | Location: 12</span>
+      <div class="a-row kp-notebook-highlight kp-notebook-highlight-pink"><span id="highlight">No id row.</span></div>
+    </div>
+  </div>
+</div>
