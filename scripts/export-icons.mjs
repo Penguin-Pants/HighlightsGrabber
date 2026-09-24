@@ -7,9 +7,7 @@ import { fileURLToPath } from 'node:url';
 const dir = fileURLToPath(new URL('../assets/brand/', import.meta.url));
 
 const jobs = [
-  { src: 'icon.svg',         out: 'icon',         sizes: [16, 32, 48, 96, 128] },
-  // Toolbar icon for dark Firefox themes (manifest theme_icons)
-  { src: 'icon-on-dark.svg', out: 'icon-on-dark', sizes: [16, 32] }
+  { src: 'icon.svg', out: 'icon', sizes: [16, 32, 48, 96, 128] }
 ];
 
 for (const { src, out, sizes } of jobs) {

@@ -87,7 +87,7 @@ The JSON file is uploaded manually by the user after running the Firefox extensi
 - **`coverUrl` can be null or a dead link** — Amazon CDN URLs can expire. Handle gracefully (fallback to no image).
 - **`asin` may be a fallback string** — if it looks like `"book-0"`, Amazon's ASIN wasn't available. Still usable as a unique key within the file.
 - **Books with zero highlights** — books without any highlight text are left out of the file. Notes without a highlight, and highlights Amazon cannot display (images, tables), are not exported.
-- **Full syncs** — every sync re-reads every book. `lastSynced` is the same sync time for every book in the file.
+- **Full syncs** — every sync re-reads every book. `lastSynced` is the time each book was read during that sync, so values in one file differ by seconds or minutes. `lastUpdated` is when the whole sync finished.
 - **Export limits** — Amazon hides or truncates some highlights for some publishers. The file contains only what Amazon shows in the notebook.
 
 ---

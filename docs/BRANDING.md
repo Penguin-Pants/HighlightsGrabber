@@ -6,55 +6,53 @@
 - **Short description:** Save your Kindle highlights to a JSON file.
 - **Relationship to Amazon:** none. Do not use Amazon or Kindle logos, colors (for example `#FF9900`) or the word "Kindle" as part of the name.
 
-## Icon concept: Keepsake
+## Icon concept: Clipping
 
-A book's ribbon bookmark with a download arrow cut into it. The ribbon says "reading". The arrow says "take it out of the book". The icon uses one silhouette and no text, so it stays clear at 16 px.
+Each highlight is a passage you keep. The icon is a pair of closing quotation marks on a disc of highlighter pink, one of the Kindle highlight colors. It uses two simple shapes and no text, so it stays clear at 16 px. One file works on light and dark toolbars.
 
 | File | Use |
 |---|---|
-| `assets/brand/icon.svg` | Master icon. Light backgrounds and light toolbars |
-| `assets/brand/icon-on-dark.svg` | Dark toolbars and dark backgrounds |
+| `assets/brand/icon.svg` | Master icon, all backgrounds |
 | `assets/brand/icon-{16,32,48,96,128}.png` | Exported from `icon.svg` |
-| `assets/brand/icon-on-dark-{16,32}.png` | Exported from `icon-on-dark.svg` |
 | `assets/brand/logo.svg` | Icon and wordmark, light backgrounds |
 | `assets/brand/logo-on-dark.svg` | Icon and wordmark, dark backgrounds |
 
-The SVG files are the masters. After you change an SVG, run `npm run icons` to export the PNG files again.
+The SVG files are the masters. After you change `icon.svg`, run `npm run icons` to export the PNG files again. The logos contain the same icon shapes, so change them as well.
 
 ## Colors
 
 | Name | HEX | Use |
 |---|---|---|
-| Ribbon teal | `#0E5A57` | Icon, primary button, links |
-| Page | `#F4EFE4` | Arrow, icon on dark backgrounds |
-| Amber | `#E9A23B` | Progress bar, focus ring |
-| Ink | `#1C2321` | Wordmark, body text |
+| Highlighter pink | `#FF6FA3` | Icon disc, primary button, progress bar |
+| Ink | `#1A1423` | Quote marks, wordmark, text on pink |
+| Paper | `#FFF7FA` | Wordmark on dark backgrounds |
+| Blue | `#3E7CB1` | Focus ring, small accents |
+| Blue text | `#2F6496` | Blue text on white (contrast 6.2:1) |
 
-Hover on teal: `#0A4744`. Use Amber for small marks only, not for text on white.
+Hover on pink: `#F5528C`. Put Ink text on pink (contrast 6.9:1), never white text. Do not use `#3E7CB1` for text on white (contrast 4.45:1, below 4.5:1).
 
 ## Typography
 
-- **Wordmark:** Literata SemiBold (SIL Open Font License), converted to outlines in the logo SVG. You do not need the font installed.
+- **Wordmark:** Literata SemiBold Italic (SIL Open Font License), converted to outlines in the logo SVG. You do not need the font installed.
 - **Popup UI:** the system font stack in `popup.css`. Do not load web fonts in the extension.
 
 ## Spacing and size
 
-- Keep clear space around the logo equal to the ribbon's width.
+- Keep clear space around the logo equal to half the disc's width.
 - In the logo, keep the icon and wordmark as they are. Do not move or scale them separately.
 - **Minimum icon size:** 16 px.
 - **Minimum logo height:** 24 px. At smaller sizes, use the icon alone.
 
 ## Light and dark
 
-- Light toolbar or background: `icon.svg`, `logo.svg`.
-- Dark toolbar or background: `icon-on-dark.svg`, `logo-on-dark.svg`.
-- Firefox selects the toolbar icon through `browser_action.theme_icons` in `manifest.json`.
+- The icon is the same on light and dark backgrounds.
+- Logo: `logo.svg` on light backgrounds, `logo-on-dark.svg` on dark backgrounds. Only the wordmark color changes.
 
 ## Browser-extension usage
 
 | Place | File |
 |---|---|
-| Toolbar button | `icon-16.png`, `icon-32.png` (+ `icon-on-dark-*` via `theme_icons`) |
+| Toolbar button | `icon-16.png`, `icon-32.png` |
 | Add-ons Manager, about:addons | `icon-48.png`, `icon-96.png` |
 | Add-on listing | `icon-128.png` |
 | Notifications | `icon-96.png` |
@@ -62,14 +60,14 @@ Hover on teal: `#0A4744`. Use Amber for small marks only, not for text on white.
 
 ## Correct use
 
-- Teal ribbon on white or on a light surface.
-- Page-colored ribbon (`icon-on-dark`) on a dark toolbar.
+- Pink disc with ink quote marks, on any toolbar color.
 - Logo at 24 px height or more, with clear space.
+- Pink buttons with ink text.
 
 ## Incorrect use
 
 - Do not add text, a border, a shadow or a gradient to the icon.
-- Do not change the colors, for example to Amazon orange.
-- Do not rotate or stretch the icon.
-- Do not put the teal icon on a dark background. Use `icon-on-dark` instead.
+- Do not change the colors, for example to Amazon orange, or make the quote marks white.
+- Do not rotate, flip or stretch the icon. Flipped quote marks become opening quotes.
+- Do not put the dark wordmark (`logo.svg`) on a dark background.
 - Do not type the wordmark in another font. Use the logo file.

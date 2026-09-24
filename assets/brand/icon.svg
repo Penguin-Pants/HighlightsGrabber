@@ -1,5 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
   <title>HighlightsGrabber</title>
-  <path d="M32 8H96a8 8 0 0 1 8 8V120L64 96 24 120V16a8 8 0 0 1 8-8Z" fill="#0E5A57"/>
-  <path d="M56 24H72V48H88L64 72 40 48H56Z" fill="#F4EFE4"/>
+  <circle cx="64" cy="64" r="60" fill="#FF6FA3"/>
+  <g fill="#1A1423" transform="translate(0 -4)">
+    <circle cx="46" cy="54" r="15"/>
+    <path d="M58 60C58 80 48 92 32 98L28 90C38 85 44 76 44 64Z"/>
+    <circle cx="84" cy="54" r="15"/>
+    <path d="M96 60C96 80 86 92 70 98L66 90C76 85 82 76 82 64Z"/>
+  </g>
 </svg>
