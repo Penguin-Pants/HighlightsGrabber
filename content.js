@@ -187,7 +187,9 @@ if (window.__highlightsGrabberLoaded) {
   // Changes when rows are replaced (next button) or appended (scroll)
   function rowsFingerprint() {
     const rows = qAll(SEL.highlightRow);
-    return rows.length ? rows.length + ':' + rows[rows.length - 1].id : '';
+    if (!rows.length) return '';
+    const last = rows[rows.length - 1];
+    return rows.length + ':' + (last.id || last.textContent.trim().slice(0, 80));
   }
 
   function usableNextBtn() {
@@ -227,6 +229,7 @@ if (window.__highlightsGrabberLoaded) {
     }
 
     const byId = new Map();
+    let pageLoaded = true;
 
     for (let page = 1; ; page++) {
       const before = byId.size;
@@ -238,8 +241,9 @@ if (window.__highlightsGrabberLoaded) {
       const annotations = document.querySelector(SEL.annotations);
       const more = hasMorePages(annotations, PSEL.annotationsNextToken);
 
-      // A load attempt added nothing new: stop
-      if (page > 1 && byId.size === before) {
+      // A load attempt changed no rows and added nothing new: stop.
+      // (A page can load but hold only notes or images, so check both.)
+      if (page > 1 && !pageLoaded && byId.size === before) {
         return { highlights: [...byId.values()], complete: !more };
       }
 
@@ -260,7 +264,7 @@ if (window.__highlightsGrabberLoaded) {
         const rows = qAll(SEL.highlightRow);
         if (rows.length) rows[rows.length - 1].scrollIntoView({ block: 'end' });
       }
-      await waitUntil(() => { const fp = rowsFingerprint(); return fp !== '' && fp !== beforeFp; }, 8000);
+      pageLoaded = await waitUntil(() => { const fp = rowsFingerprint(); return fp !== '' && fp !== beforeFp; }, 8000);
       await sleep(200); // brief settle after the rows change
     }
 

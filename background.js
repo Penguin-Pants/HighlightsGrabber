@@ -237,6 +237,8 @@ function describeWarnings(w) {
 // ---------------------------------------------------------------------------
 
 async function downloadJSON() {
+  // Cleared first, so a failed download never shows an older file as saved
+  syncStatus.lastFilename = null;
   try {
     const stored = await browser.storage.local.get(STORAGE_KEY);
     const data = stored[STORAGE_KEY];
