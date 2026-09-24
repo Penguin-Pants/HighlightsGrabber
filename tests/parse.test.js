@@ -57,6 +57,12 @@ test('makes a stable id for rows without one', () => {
   assert.equal(a.color, 'pink');
 });
 
+test('gives long highlights with the same opening words different ids', () => {
+  const prefix = 'x'.repeat(100);
+  assert.notEqual(P.makeId(prefix + ' one', 'Location 1'), P.makeId(prefix + ' two', 'Location 1'));
+  assert.notEqual(P.makeId(prefix, 'Location 1'), P.makeId(prefix, 'Location 2'));
+});
+
 test('parses all rows of the fixture', () => {
   const list = rows(load()).map(P.parseRow).filter(Boolean);
   assert.equal(list.length, 4);

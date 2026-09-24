@@ -124,23 +124,31 @@ if (window.__highlightsGrabberLoaded) {
     return new URLSearchParams(location.search).get('asin');
   }
 
-  // Returns false if the panel shows a different book after the timeout
+  // Returns false if neither the panel nor the URL confirms the switch
   async function openBook(el, expectedAsin) {
-    if (expectedAsin && panelAsin() === expectedAsin) return true;
-
-    const prevSearch = location.search;
-    const urlChanged = () => location.search !== prevSearch;
+    const prevSearch  = location.search;
+    const prevPanel   = document.querySelector(SEL.panelAsin);
+    const alreadyOpen = expectedAsin && panelAsin() === expectedAsin;
     clickBook(el);
 
     if (!expectedAsin) {
-      await waitUntil(urlChanged, 12000);
+      await waitUntil(() => location.search !== prevSearch, 12000);
       return true;
     }
 
-    // If the panel has no asin input at all, fall back to the URL change
-    await waitUntil(() => panelAsin() === expectedAsin || (panelAsin() === null && urlChanged()), 15000);
-    const current = panelAsin();
-    return current === null || current === expectedAsin;
+    if (alreadyOpen) {
+      // The click reloads the panel at its first page. If Amazon does not
+      // reload it, continue with the panel as it is.
+      await waitUntil(() => {
+        const input = document.querySelector(SEL.panelAsin);
+        return input && input !== prevPanel && input.value === expectedAsin;
+      }, 5000);
+      return true;
+    }
+
+    // If the panel has no asin input at all, fall back to the URL's asin= param
+    return waitUntil(() => panelAsin() === expectedAsin ||
+                           (panelAsin() === null && asinFromUrl() === expectedAsin), 15000);
   }
 
   // ---------------------------------------------------------------------------

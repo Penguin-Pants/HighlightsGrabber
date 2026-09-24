@@ -25,8 +25,10 @@ var HighlightsGrabberParse = HighlightsGrabberParse || (function () {
     return null;
   }
 
+  // Hash of the full text and location, so long highlights with the same
+  // opening words get different ids
   function makeId(text, loc) {
-    const raw = (text + loc).slice(0, 80);
+    const raw = text + '\u0000' + loc;
     let h = 0;
     for (let i = 0; i < raw.length; i++) { h = ((h << 5) - h) + raw.charCodeAt(i); h |= 0; }
     return 'h' + Math.abs(h).toString(36);
