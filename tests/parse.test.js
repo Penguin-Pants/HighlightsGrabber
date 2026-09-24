@@ -86,13 +86,29 @@ test('detects more pages from the last token input', () => {
   assert.equal(P.hasMorePages(doc.body, P.SEL.libraryNextToken), false);
 });
 
+test("reads Amazon's highlight count", () => {
+  const doc = load();
+  assert.equal(P.readHighlightCount(doc), 1341);
+  doc.getElementById('kp-notebook-annotation-count').textContent = '1 Highlight | 0 Notes';
+  assert.equal(P.readHighlightCount(doc), 1);
+  doc.getElementById('kp-notebook-annotation-count').remove();
+  assert.equal(P.readHighlightCount(doc), null);
+});
+
+test('detects the export-limit notice only when Amazon shows it', () => {
+  const doc = load();
+  assert.equal(P.isExportLimited(doc), false);
+  doc.getElementById('kp-notebook-hidden-annotations-summary').classList.remove('aok-hidden');
+  assert.equal(P.isExportLimited(doc), true);
+});
+
 test('every file the manifest references exists', () => {
   const m = JSON.parse(fs.readFileSync(path.join(root, 'manifest.json'), 'utf8'));
   const files = [
     ...m.background.scripts,
     m.browser_action.default_popup,
     ...Object.values(m.browser_action.default_icon),
-    ...m.browser_action.theme_icons.flatMap(t => [t.light, t.dark]),
+    ...(m.browser_action.theme_icons || []).flatMap(t => [t.light, t.dark]),
     ...m.content_scripts.flatMap(c => c.js),
     ...Object.values(m.icons)
   ];

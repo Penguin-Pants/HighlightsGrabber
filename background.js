@@ -227,6 +227,7 @@ function describeWarnings(w) {
   if (w.libraryIncomplete) parts.push('Some books may be missing from the library list.');
   if (w.incompleteBooks.length) parts.push(`${w.incompleteBooks.length} book(s) may be incomplete: ${w.incompleteBooks.join(', ')}.`);
   if (w.failedBooks.length) parts.push(`${w.failedBooks.length} book(s) did not load: ${w.failedBooks.join(', ')}.`);
+  if (w.limitedBooks && w.limitedBooks.length) parts.push(`Amazon's export limit hides some highlights in ${w.limitedBooks.length} book(s): ${w.limitedBooks.join(', ')}.`);
   if (w.emptyBooks) parts.push(`${w.emptyBooks} book(s) without highlights left out.`);
   return parts.length ? parts.join(' ') : null;
 }

@@ -51,7 +51,9 @@ The JSON format is documented in [CLAUDE.md](CLAUDE.md).
 |---|---|
 | "Sign in to Amazon in the Kindle tab…" | Sign in, then click **Sync Highlights** again |
 | "The Kindle tab was closed or reloaded" | Click **Sync Highlights** again and leave the tab open |
-| "…may be incomplete" or "…did not load" | Sync again. If the message stays, Amazon may have changed its page |
+| "…may be incomplete: Title (244 of 341)" | Fewer highlights loaded than Amazon's count. Sync again. If the numbers stay, Amazon may have changed its page |
+| "…did not load" | Sync again. If the message stays, Amazon may have changed its page |
+| "Amazon's export limit hides some highlights…" | Normal. The publisher limits exports, so the notebook shows only part of the highlights |
 | "…without highlights left out" | Normal for books with only notes or images |
 
 ## Development

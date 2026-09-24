@@ -84,7 +84,7 @@ h1 {
 }
 
 .progress-bar-fill {
-  background: #e9a23b;
+  background: #ff6fa3;
   height: 100%;
   width: 0%;
   border-radius: 6px;
@@ -121,7 +121,7 @@ h1 {
 }
 
 .saved-text {
-  color: #0e5a57;
+  color: #2f6496;
   font-size: 12px;
   overflow-wrap: anywhere;
 }
@@ -149,7 +149,7 @@ h1 {
 }
 
 .btn:focus-visible {
-  outline: 2px solid #e9a23b;
+  outline: 2px solid #3e7cb1;
   outline-offset: 2px;
 }
 
@@ -159,12 +159,12 @@ h1 {
 }
 
 .btn-primary {
-  background: #0e5a57;
-  color: #fff;
+  background: #ff6fa3;
+  color: #1a1423;
 }
 
 .btn-primary:not(:disabled):hover {
-  background: #0a4744;
+  background: #f5528c;
 }
 
 .btn-secondary {

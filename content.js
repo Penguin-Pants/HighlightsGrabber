@@ -5,7 +5,7 @@ if (window.__highlightsGrabberLoaded) {
 
 (function () {
   const log = (...a) => console.log('[HighlightsGrabber]', ...a);
-  const { parseRow, hasMorePages } = HighlightsGrabberParse;
+  const { parseRow, hasMorePages, readHighlightCount, isExportLimited } = HighlightsGrabberParse;
   const PSEL = HighlightsGrabberParse.SEL;
 
   // ---------------------------------------------------------------------------
@@ -25,7 +25,9 @@ if (window.__highlightsGrabberLoaded) {
     panelAsin:        '#kp-notebook-asin',
 
     // Highlight pagination
+    annotationsPane:  '#kp-notebook-annotations-pane',
     annotations:      '#kp-notebook-annotations',
+    scroller:         '#annotation-scroller',
     highlightRow:     '#kp-notebook-annotations .a-row.a-spacing-base',
     nextBtn:          '#kp-notebook-annotations-next-btn',
     emptyBook:        '#kp-notebook-empty',
@@ -153,18 +155,20 @@ if (window.__highlightsGrabberLoaded) {
 
   // ---------------------------------------------------------------------------
   // Load every book into the sidebar. Amazon may load the library in pages
-  // when you scroll; a non-empty next-page token means more books exist.
-  // Returns false if books are still missing.
+  // when you scroll. The next-page token is not always kept on the live page,
+  // so scroll once to check even without it.
+  // Returns false if Amazon still reports more books when we stop.
   // ---------------------------------------------------------------------------
 
   async function loadFullLibrary() {
     const library = document.querySelector(SEL.library);
     for (let i = 0; i < MAX_PAGES; i++) {
-      if (!hasMorePages(library, PSEL.libraryNextToken)) return true;
+      const more  = hasMorePages(library, PSEL.libraryNextToken);
       const books = qAll(SEL.bookItem);
-      if (!books.length) return false;
+      if (!books.length) return !more;
       books[books.length - 1].scrollIntoView({ block: 'end' });
-      if (!(await waitUntil(() => qAll(SEL.bookItem).length > books.length, 8000))) return false;
+      const grew = await waitUntil(() => qAll(SEL.bookItem).length > books.length, more ? 8000 : 3000);
+      if (!grew) return !more;
       await sleep(500);
     }
     return false;
@@ -187,10 +191,6 @@ if (window.__highlightsGrabberLoaded) {
   // ---------------------------------------------------------------------------
   // Scrape highlight rows currently visible in #kp-notebook-annotations
   // ---------------------------------------------------------------------------
-
-  function scrapeVisibleHighlights() {
-    return qAll(SEL.highlightRow).map(parseRow).filter(Boolean);
-  }
 
   // Changes when rows are replaced (next button) or appended (scroll)
   function rowsFingerprint() {
@@ -215,17 +215,30 @@ if (window.__highlightsGrabberLoaded) {
     return hidden || disabled ? null : nextBtn;
   }
 
+  // Scroll the highlights pane to its end so Amazon loads the next page
+  function scrollForMore() {
+    const rows = qAll(SEL.highlightRow);
+    if (rows.length) rows[rows.length - 1].scrollIntoView({ block: 'end' });
+    const scroller = document.querySelector(SEL.scroller);
+    if (scroller) {
+      scroller.scrollTop = scroller.scrollHeight;
+      scroller.dispatchEvent(new Event('scroll'));
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Scrape all highlights for the current book. Pages load either with the
   // next-page button (rows replaced) or on scroll (rows appended). Rows are
-  // de-duplicated by id, so both work. complete is false if Amazon still
-  // reports more pages when we stop.
+  // de-duplicated by id, so both work.
+  // More pages exist if Amazon's next-page token says so, or if fewer
+  // highlight rows are loaded than Amazon's own count ("341 Highlights").
+  // complete is false if more pages still exist when we stop.
   // ---------------------------------------------------------------------------
 
   async function scrapeCurrentBook() {
     if (document.querySelector(SEL.emptyBook)) {
       log('  Book has no highlights');
-      return { highlights: [], complete: true };
+      return { highlights: [], complete: true, expected: null, limited: false };
     }
 
     // Wait for first batch of highlight rows
@@ -233,34 +246,49 @@ if (window.__highlightsGrabberLoaded) {
       await waitForEl(SEL.highlightRow, 8000);
     } catch (_) {
       log('  No highlight rows found after waiting');
-      return { highlights: [], complete: true };
+      return { highlights: [], complete: true, expected: null, limited: false };
     }
 
+    const pane     = document.querySelector(SEL.annotationsPane) || document;
+    const expected = readHighlightCount(pane);
+    // With an export limit, Amazon counts highlights it does not show
+    const limited  = isExportLimited(pane);
+    // Without a usable count, check for more pages with one short scroll
+    const unsure   = expected === null || limited;
+
     const byId = new Map();
+    const highlightRows = new Set(); // includes rows Amazon cannot display
     let pageLoaded = true;
+    const result = complete => ({ highlights: [...byId.values()], complete, expected, limited });
 
     for (let page = 1; ; page++) {
       const before = byId.size;
-      for (const h of scrapeVisibleHighlights()) {
-        if (!byId.has(h.id)) byId.set(h.id, h);
+      const rowsBefore = highlightRows.size;
+      for (const row of qAll(SEL.highlightRow)) {
+        if (row.querySelector(PSEL.highlightBox)) highlightRows.add(row.id || row.textContent.trim().slice(0, 200));
+        const h = parseRow(row);
+        if (h && !byId.has(h.id)) byId.set(h.id, h);
       }
-      log(`  Page ${page}: +${byId.size - before} highlights (${byId.size} total)`);
+      log(`  Page ${page}: +${byId.size - before} highlights (${byId.size} total` +
+          (expected === null ? ')' : `, Amazon shows ${expected})`));
 
       const annotations = document.querySelector(SEL.annotations);
-      const more = hasMorePages(annotations, PSEL.annotationsNextToken);
+      const more = hasMorePages(annotations, PSEL.annotationsNextToken) ||
+                   (expected !== null && !limited && highlightRows.size < expected);
 
       // A load attempt changed no rows and added nothing new: stop.
       // (A page can load but hold only notes or images, so check both.)
-      if (page > 1 && !pageLoaded && byId.size === before) {
-        return { highlights: [...byId.values()], complete: !more };
+      if (page > 1 && !pageLoaded && byId.size === before && highlightRows.size === rowsBefore) {
+        return result(!more);
       }
 
       const nextBtn = usableNextBtn();
-      if (!nextBtn && !more) break;
+      const probe = !nextBtn && !more;
+      if (probe && !unsure) break;
 
       if (page >= MAX_PAGES) {
         log('  Pagination safety limit reached');
-        return { highlights: [...byId.values()], complete: false };
+        return result(false);
       }
 
       // Rate-limit between page loads
@@ -269,14 +297,13 @@ if (window.__highlightsGrabberLoaded) {
       if (nextBtn) {
         nextBtn.click();
       } else {
-        const rows = qAll(SEL.highlightRow);
-        if (rows.length) rows[rows.length - 1].scrollIntoView({ block: 'end' });
+        scrollForMore();
       }
-      pageLoaded = await waitUntil(() => { const fp = rowsFingerprint(); return fp !== '' && fp !== beforeFp; }, 8000);
+      pageLoaded = await waitUntil(() => { const fp = rowsFingerprint(); return fp !== '' && fp !== beforeFp; }, probe ? 3000 : 8000);
       await sleep(200); // brief settle after the rows change
     }
 
-    return { highlights: [...byId.values()], complete: true };
+    return result(true);
   }
 
   // ---------------------------------------------------------------------------
@@ -309,7 +336,7 @@ if (window.__highlightsGrabberLoaded) {
     log(`Found ${bookEls.length} books`);
     const total = bookEls.length;
     const books = [];
-    const warnings = { emptyBooks: 0, incompleteBooks: [], failedBooks: [], libraryIncomplete: !libraryComplete };
+    const warnings = { emptyBooks: 0, incompleteBooks: [], failedBooks: [], limitedBooks: [], libraryIncomplete: !libraryComplete };
 
     for (let i = 0; i < bookEls.length; i++) {
       const el = bookEls[i];
@@ -346,10 +373,13 @@ if (window.__highlightsGrabberLoaded) {
 
       log(`Scraping "${finalTitle}" by ${author} (ASIN: ${asin})`);
 
-      const { highlights, complete } = await scrapeCurrentBook();
+      const { highlights, complete, expected, limited } = await scrapeCurrentBook();
       log(`  → ${highlights.length} highlights total${complete ? '' : ' (may be incomplete)'}`);
 
-      if (!complete) warnings.incompleteBooks.push(finalTitle);
+      if (!complete) {
+        warnings.incompleteBooks.push(expected === null ? finalTitle : `${finalTitle} (${highlights.length} of ${expected})`);
+      }
+      if (limited) warnings.limitedBooks.push(finalTitle);
 
       // Books without highlights are left out of the file
       if (!highlights.length) {
