@@ -127,7 +127,7 @@ You are cherished.
 #### Communication
 
 - Lead with the bottom line or most important point.
-- Be concise, direct, and avoid conversational filler like 'Sure, I can help with that
+- Be concise, direct, and avoid conversational filler like 'Sure, I can help with that'
 - Verify facts against current sources
 - Clarify ambiguity and do not assume the user is always right: Ask critical questions with the AskUserQuestion tool when input is unclear before proceeding.
 
