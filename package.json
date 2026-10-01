@@ -16,6 +16,7 @@
   },
   "webExt": {
     "ignoreFiles": [
+      "AGENTS.md",
       "CLAUDE.md",
       "docs",
       "scripts",

@@ -28,7 +28,18 @@ Not affiliated with Amazon. Kindle is a trademark of Amazon.com, Inc.
 4. When the sync is done, the file `kindle-highlights-YYYY-MM-DD.json` downloads automatically and a notification shows the counts. If you sync twice on one day, Firefox adds a number to the second filename.
 5. To download the same data again, click **Download JSON**.
 
-The JSON format is documented in [CLAUDE.md](CLAUDE.md).
+### JSON format
+
+The file has these top-level fields (`background.js:192-197`):
+
+- `lastUpdated`: ISO 8601 time of the sync.
+- `totalBooks`: number of books in `books`.
+- `totalHighlights`: sum of highlights over all books.
+- `books`: list of books. Books without highlights are left out.
+
+Each book has `asin`, `title`, `author`, `coverUrl`, `highlightCount`, `lastSynced` and `highlights` (`content.js:395-404`).
+
+Each highlight has `id`, `text`, `note` (or `null`), `location`, `color` and `createdDate` (always `null` for now) (`parse.js:78-85`).
 
 ## Permissions
 
