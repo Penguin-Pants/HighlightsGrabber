@@ -44,7 +44,7 @@ None found. No `.env.example`. No `process.env` use in `scripts/` or the extensi
 
 - `parse.js` holds the Amazon page selectors (`parse.js:5`). If Amazon changes the notebook page, the sync breaks. Update the selectors and the fixture together.
 - `parse.js` is loaded by `manifest.json` content scripts and by `tests/parse.test.js`. It ends with a `module.exports` guard (`parse.js:114`), so keep it loadable in Node.
-- `npm run build` packs every file not in `webExt.ignoreFiles` (`package.json:18`). That list names `CLAUDE.md` but not `AGENTS.md`.
+- `npm run build` packs every file not in `webExt.ignoreFiles` (`package.json:18-19`). That list names `AGENTS.md` and `CLAUDE.md`, so both stay out of the package.
 - The saved data uses the storage key `kindleHighlights` (`background.js:1`).
 
 ## Do not
