@@ -44,6 +44,7 @@ var HighlightsGrabberParse = HighlightsGrabberParse || (function () {
   };
 
   const COLORS = ['yellow', 'pink', 'blue', 'orange'];
+  const ASIN_RE = /^[A-Z0-9]{10}$/i;
 
   // First match of a selector or of the first matching selector in a list
   function q(selector, parent = document) {
@@ -131,6 +132,14 @@ var HighlightsGrabberParse = HighlightsGrabberParse || (function () {
     return Boolean(el && !el.classList.contains('aok-hidden'));
   }
 
+  // ASIN of a sidebar book element, read before the book is opened, or null
+  function bookAsin(el) {
+    for (const value of [el.id, el.getAttribute('data-asin'), el.getAttribute('data-book-asin')]) {
+      if (value && ASIN_RE.test(value)) return value;
+    }
+    return null;
+  }
+
   // True while fewer highlight rows are loaded than Amazon's own count.
   // With an export limit, Amazon counts highlights it does not show.
   function countSaysMore(expected, limited, loaded) {
@@ -151,7 +160,7 @@ var HighlightsGrabberParse = HighlightsGrabberParse || (function () {
 
   return {
     SEL, q, makeId, extractColor, readLocation, parseRow, hasMorePages, readHighlightCount, isExportLimited,
-    countSaysMore, describeWarnings
+    bookAsin, countSaysMore, describeWarnings
   };
 })();
 

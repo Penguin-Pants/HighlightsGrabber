@@ -159,3 +159,15 @@ test('describes each kind of warning', () => {
     "Amazon's export limit hides some highlights in 1 book(s): C. " +
     '2 book(s) without highlights left out.');
 });
+
+test("reads a sidebar book's ASIN from its id or data attributes", () => {
+  const book = attrs => {
+    const el = load().createElement('div');
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+    return el;
+  };
+  assert.equal(P.bookAsin(book({ id: 'B0EXAMPLE1', 'data-asin': 'B0EXAMPLE2' })), 'B0EXAMPLE1');
+  assert.equal(P.bookAsin(book({ id: 'row-3', 'data-asin': 'B0EXAMPLE2' })), 'B0EXAMPLE2');
+  assert.equal(P.bookAsin(book({ 'data-book-asin': 'B0EXAMPLE3' })), 'B0EXAMPLE3');
+  assert.equal(P.bookAsin(book({ id: 'row-3', 'data-asin': 'not an asin' })), null);
+});

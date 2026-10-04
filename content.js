@@ -5,9 +5,8 @@ if (window.__highlightsGrabberLoaded) {
 
 (function () {
   const log = (...a) => console.log('[HighlightsGrabber]', ...a);
-  const { SEL, q, parseRow, countSaysMore, hasMorePages, readHighlightCount, isExportLimited, makeId, readLocation } = HighlightsGrabberParse;
+  const { SEL, q, parseRow, bookAsin, countSaysMore, hasMorePages, readHighlightCount, isExportLimited, makeId, readLocation } = HighlightsGrabberParse;
 
-  const ASIN_RE = /^[A-Z0-9]{10}$/i;
   const MAX_PAGES = 200;
 
   // ---------------------------------------------------------------------------
@@ -82,15 +81,17 @@ if (window.__highlightsGrabberLoaded) {
   }
 
   // Returns false if neither the panel nor the URL confirms the switch
-  async function openBook(el, expectedAsin) {
+  async function openBook(el, expectedAsin, expectedTitle) {
     const prevSearch  = location.search;
     const prevPanel   = document.querySelector(SEL.panelAsin);
     const alreadyOpen = expectedAsin && panelAsin() === expectedAsin;
     clickBook(el);
 
     if (!expectedAsin) {
-      await waitUntil(() => location.search !== prevSearch, 12000);
-      return true;
+      // Without a URL change or a matching title, the panel may still show
+      // the previous book
+      return waitUntil(() => location.search !== prevSearch ||
+                             (expectedTitle && scrapePanelMeta().title === expectedTitle), 12000);
     }
 
     if (alreadyOpen) {
@@ -313,19 +314,15 @@ if (window.__highlightsGrabberLoaded) {
       browser.runtime.sendMessage({ action: 'progress', current: i + 1, total, bookTitle: progressTitle });
 
       // Click the book and wait for the right panel to show it
-      const rowAsin = ASIN_RE.test(el.id) ? el.id : null;
-      if (!(await openBook(el, rowAsin))) {
+      const rowAsin = bookAsin(el);
+      if (!(await openBook(el, rowAsin, sidebarTitle))) {
         log(`Skipping "${progressTitle}" — panel did not switch to this book`);
         warnings.failedBooks.push(progressTitle);
         continue;
       }
 
-      // Canonical ASIN from the panel or URL, with fallbacks
-      const asin = rowAsin ||
-                   asinFromUrl() ||
-                   el.getAttribute('data-asin') ||
-                   el.getAttribute('data-book-asin') ||
-                   `book-${i}`;
+      // The book's own ASIN, else the URL's asin= param (openBook saw it change)
+      const asin = rowAsin || asinFromUrl() || `book-${i}`;
 
       // Read title and author from the right panel now that it has loaded
       const { title, author } = scrapePanelMeta();
