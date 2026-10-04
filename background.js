@@ -244,15 +244,20 @@ async function downloadJSON() {
     const url  = URL.createObjectURL(blob);
     const filename = `kindle-highlights-${localDate()}.json`;
 
+    let id;
     try {
-      await browser.downloads.download({ url, filename, saveAs: false });
+      id = await browser.downloads.download({ url, filename, saveAs: false });
     } finally {
       // Revoke the object URL shortly after triggering the download
       setTimeout(() => URL.revokeObjectURL(url), 60000);
     }
 
-    syncStatus.lastFilename = filename;
-    return { ok: true, filename };
+    // Firefox adds a number when the file exists; report the name it used
+    const [item] = await browser.downloads.search({ id });
+    const saved = item && item.filename ? item.filename.split(/[\\/]/).pop() : filename;
+
+    syncStatus.lastFilename = saved;
+    return { ok: true, filename: saved };
   } catch (err) {
     return { ok: false, error: err.message };
   }
