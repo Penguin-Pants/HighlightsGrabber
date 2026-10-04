@@ -8,6 +8,7 @@
   const highlightCount = document.getElementById('highlight-count');
   const lastSynced    = document.getElementById('last-synced');
   const progressSec   = document.getElementById('progress-section');
+  const progressBar   = document.getElementById('progress-bar');
   const progressFill  = document.getElementById('progress-fill');
   const progressText  = document.getElementById('progress-text');
   const errorSec      = document.getElementById('error-section');
@@ -92,7 +93,8 @@
     syncBtn.disabled = on;
     syncBtn.textContent = on ? 'Syncing…' : 'Sync Highlights';
     if (on) {
-      progressSec.classList.remove('hidden');
+      // Clear the bar and text left from an earlier sync in this popup
+      showProgress(0, 0, '');
     }
   }
 
@@ -105,8 +107,9 @@
     progressSec.classList.remove('hidden');
     const pct = total > 0 ? Math.round((current / total) * 100) : 0;
     progressFill.style.width = pct + '%';
-    progressText.textContent = title
-      ? `(${current}/${total}) ${title}`
+    progressBar.setAttribute('aria-valuenow', pct);
+    progressText.textContent = total === 0 ? 'Starting…'
+      : title ? `(${current}/${total}) ${title}`
       : `Processing ${current} of ${total}…`;
   }
 

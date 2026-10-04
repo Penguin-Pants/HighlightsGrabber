@@ -5,59 +5,13 @@ if (window.__highlightsGrabberLoaded) {
 
 (function () {
   const log = (...a) => console.log('[HighlightsGrabber]', ...a);
-  const { parseRow, hasMorePages, readHighlightCount, isExportLimited, makeId, readLocation } = HighlightsGrabberParse;
-  const PSEL = HighlightsGrabberParse.SEL;
+  const { SEL, q, parseRow, bookAsin, countSaysMore, hasMorePages, readHighlightCount, isExportLimited, makeId, readLocation } = HighlightsGrabberParse;
 
-  // ---------------------------------------------------------------------------
-  // Stable selectors from read.amazon.com/notebook
-  // ---------------------------------------------------------------------------
-
-  const SEL = {
-    // Library container — wait for this before anything else
-    library:          '#kp-notebook-library',
-
-    // Sidebar book list (each element's id is the book's ASIN)
-    bookItem:         '#kp-notebook-library .kp-notebook-library-each-book',
-
-    // Right panel — populated after clicking a book
-    panelTitle:       '#kp-notebook-annotations-pane h3.kp-notebook-metadata',
-    panelAuthor:      '#kp-notebook-annotations-pane .a-color-secondary.a-size-base',
-    panelAsin:        '#kp-notebook-asin',
-
-    // Highlight pagination
-    annotationsPane:  '#kp-notebook-annotations-pane',
-    annotations:      '#kp-notebook-annotations',
-    scroller:         '#annotation-scroller',
-    highlightRow:     '#kp-notebook-annotations .a-row.a-spacing-base',
-    nextBtn:          '#kp-notebook-annotations-next-btn',
-    emptyBook:        '#kp-notebook-empty',
-
-    // Sidebar title — used for the progress label and as a title fallback
-    sidebarTitle:     [
-      '.kp-notebook-searchable-item-name',
-      'h2.a-size-base',
-      'h2',
-      '.a-text-bold'
-    ]
-  };
-
-  const ASIN_RE = /^[A-Z0-9]{10}$/i;
   const MAX_PAGES = 200;
 
   // ---------------------------------------------------------------------------
   // DOM helpers
   // ---------------------------------------------------------------------------
-
-  function q(selector, parent = document) {
-    if (Array.isArray(selector)) {
-      for (const s of selector) {
-        const el = parent.querySelector(s);
-        if (el) return el;
-      }
-      return null;
-    }
-    return parent.querySelector(selector);
-  }
 
   function qAll(selector, parent = document) {
     return Array.from(parent.querySelectorAll(selector));
@@ -127,15 +81,22 @@ if (window.__highlightsGrabberLoaded) {
   }
 
   // Returns false if neither the panel nor the URL confirms the switch
-  async function openBook(el, expectedAsin) {
+  async function openBook(el, expectedAsin, expectedTitle) {
     const prevSearch  = location.search;
     const prevPanel   = document.querySelector(SEL.panelAsin);
+    const prevTitleEl = document.querySelector(SEL.panelTitle);
     const alreadyOpen = expectedAsin && panelAsin() === expectedAsin;
     clickBook(el);
 
     if (!expectedAsin) {
-      await waitUntil(() => location.search !== prevSearch, 12000);
-      return true;
+      // Need a URL change, or a newly rendered panel with this book's title.
+      // A title match alone can be the previous book with the same title.
+      return waitUntil(() => {
+        if (location.search !== prevSearch) return true;
+        const titleEl = document.querySelector(SEL.panelTitle);
+        return Boolean(expectedTitle && titleEl && titleEl !== prevTitleEl &&
+                       titleEl.textContent.trim() === expectedTitle);
+      }, 12000);
     }
 
     if (alreadyOpen) {
@@ -162,7 +123,7 @@ if (window.__highlightsGrabberLoaded) {
   async function loadFullLibrary() {
     const library = document.querySelector(SEL.library);
     for (let i = 0; i < MAX_PAGES; i++) {
-      if (!hasMorePages(library, PSEL.libraryNextToken)) return true;
+      if (!hasMorePages(library, SEL.libraryNextToken)) return true;
       const books = qAll(SEL.bookItem);
       if (!books.length) return false;
       books[books.length - 1].scrollIntoView({ block: 'end' });
@@ -270,7 +231,7 @@ if (window.__highlightsGrabberLoaded) {
         if (h && !byId.has(h.id)) byId.set(h.id, h);
         // Same identity as the exported id; rows without text (images) use
         // the full row text and location
-        if (row.querySelector(PSEL.highlightBox)) {
+        if (row.querySelector(SEL.highlightBox)) {
           highlightRows.add(h ? h.id : (row.id || makeId(row.textContent.trim(), readLocation(row))));
         }
       }
@@ -278,8 +239,8 @@ if (window.__highlightsGrabberLoaded) {
           (expected === null ? ')' : `, Amazon shows ${expected})`));
 
       const annotations = document.querySelector(SEL.annotations);
-      const more = hasMorePages(annotations, PSEL.annotationsNextToken) ||
-                   (expected !== null && !limited && highlightRows.size < expected);
+      const more = hasMorePages(annotations, SEL.annotationsNextToken) ||
+                   countSaysMore(expected, limited, highlightRows.size);
 
       // A load attempt changed no rows and added nothing new: stop.
       // (A page can load but hold only notes or images, so check both.)
@@ -358,19 +319,15 @@ if (window.__highlightsGrabberLoaded) {
       browser.runtime.sendMessage({ action: 'progress', current: i + 1, total, bookTitle: progressTitle });
 
       // Click the book and wait for the right panel to show it
-      const rowAsin = ASIN_RE.test(el.id) ? el.id : null;
-      if (!(await openBook(el, rowAsin))) {
+      const rowAsin = bookAsin(el);
+      if (!(await openBook(el, rowAsin, sidebarTitle))) {
         log(`Skipping "${progressTitle}" — panel did not switch to this book`);
         warnings.failedBooks.push(progressTitle);
         continue;
       }
 
-      // Canonical ASIN from the panel or URL, with fallbacks
-      const asin = rowAsin ||
-                   asinFromUrl() ||
-                   el.getAttribute('data-asin') ||
-                   el.getAttribute('data-book-asin') ||
-                   `book-${i}`;
+      // The book's own ASIN, else the URL's asin= param (openBook saw it change)
+      const asin = rowAsin || asinFromUrl() || `book-${i}`;
 
       // Read title and author from the right panel now that it has loaded
       const { title, author } = scrapePanelMeta();

@@ -13,7 +13,7 @@ function load(markup = html) {
 }
 
 function rows(doc) {
-  return Array.from(doc.querySelectorAll('#kp-notebook-annotations .a-row.a-spacing-base'));
+  return Array.from(doc.querySelectorAll(P.SEL.highlightRow));
 }
 
 test('parses a page-based highlight', () => {
@@ -47,11 +47,17 @@ test('skips rows without highlight text', () => {
   assert.equal(P.parseRow(doc.getElementById('ROW-IMAGE')), null);
 });
 
+test('keeps a one-character highlight', () => {
+  const h = P.parseRow(load().getElementById('ROW-ONE-CHAR'));
+  assert.equal(h && h.text, '愛');
+  assert.equal(h.location, 'Location 40');
+});
+
 test('makes a stable id for rows without one', () => {
   const doc = load();
   const noId = rows(doc).find(r => !r.id);
   const a = P.parseRow(noId);
-  const b = P.parseRow(load().querySelectorAll('#kp-notebook-annotations .a-row.a-spacing-base')[5]);
+  const b = P.parseRow(rows(load()).find(r => !r.id));
   assert.match(a.id, /^h[0-9a-z]+$/);
   assert.equal(a.id, b.id);
   assert.equal(a.color, 'pink');
@@ -65,7 +71,7 @@ test('gives long highlights with the same opening words different ids', () => {
 
 test('parses all rows of the fixture', () => {
   const list = rows(load()).map(P.parseRow).filter(Boolean);
-  assert.equal(list.length, 4);
+  assert.equal(list.length, 5);
   assert.ok(list.every(h => h.text && h.location));
 });
 
@@ -114,4 +120,75 @@ test('every file the manifest references exists', () => {
   ];
   for (const f of files) assert.ok(fs.existsSync(path.join(root, f)), `missing ${f}`);
   assert.ok(!m.permissions.includes('tabs'));
+});
+
+test('finds the book panel header with the panel selectors', () => {
+  const doc = load();
+  assert.equal(P.q(P.SEL.panelTitle, doc).textContent.trim(), 'Example Book');
+  assert.equal(P.q(P.SEL.panelAuthor, doc).textContent.trim(), 'Example Author');
+  assert.equal(P.q(P.SEL.panelAsin, doc).getAttribute('value'), 'B0EXAMPLE1');
+  assert.equal(P.q(P.SEL.emptyBook, doc), null);
+});
+
+test('q returns the first selector in a list that matches', () => {
+  const doc = load();
+  assert.equal(P.q(['#missing', '#ROW-LOC', '#ROW-PAGE'], doc).id, 'ROW-LOC');
+  assert.equal(P.q(['#missing', '#also-missing'], doc), null);
+});
+
+test('the highlight count asks for more rows only without an export limit', () => {
+  assert.equal(P.countSaysMore(150, false, 120), true);
+  assert.equal(P.countSaysMore(150, false, 150), false);
+  assert.equal(P.countSaysMore(150, true, 120), false);
+  assert.equal(P.countSaysMore(null, false, 0), false);
+});
+
+const noWarnings = () => ({ emptyBooks: 0, incompleteBooks: [], failedBooks: [], limitedBooks: [], libraryIncomplete: false });
+
+test('describes no warnings as null', () => {
+  assert.equal(P.describeWarnings(null), null);
+  assert.equal(P.describeWarnings(noWarnings()), null);
+});
+
+test('describes each kind of warning', () => {
+  const w = {
+    emptyBooks: 2,
+    incompleteBooks: ['A (1 of 3)'],
+    failedBooks: ['B'],
+    limitedBooks: ['C'],
+    libraryIncomplete: true
+  };
+  assert.equal(P.describeWarnings(w),
+    'Some books may be missing from the library list. ' +
+    '1 book(s) may be incomplete: A (1 of 3). ' +
+    '1 book(s) did not load: B. ' +
+    "Amazon's export limit hides some highlights in 1 book(s): C. " +
+    '2 book(s) without highlights left out.');
+});
+
+test("reads a sidebar book's ASIN from its id or data attributes", () => {
+  const book = attrs => {
+    const el = load().createElement('div');
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+    return el;
+  };
+  assert.equal(P.bookAsin(book({ id: 'B0EXAMPLE1', 'data-asin': 'B0EXAMPLE2' })), 'B0EXAMPLE1');
+  assert.equal(P.bookAsin(book({ id: 'row-3', 'data-asin': 'B0EXAMPLE2' })), 'B0EXAMPLE2');
+  assert.equal(P.bookAsin(book({ 'data-book-asin': 'B0EXAMPLE3' })), 'B0EXAMPLE3');
+  assert.equal(P.bookAsin(book({ id: 'row-3', 'data-asin': 'not an asin' })), null);
+});
+
+test('a sync without highlights fails only when books did not load', () => {
+  const book = { asin: 'B0EXAMPLE1', highlights: [{ id: 'h1' }] };
+  assert.equal(P.syncFailure([book], { ...noWarnings(), failedBooks: ['B'] }), null);
+  // An account with only empty books is a valid result
+  assert.equal(P.syncFailure([], { ...noWarnings(), emptyBooks: 3 }), null);
+
+  for (const w of [
+    { ...noWarnings(), failedBooks: ['B'] },
+    { ...noWarnings(), incompleteBooks: ['C (0 of 5)'] },
+    { ...noWarnings(), libraryIncomplete: true }
+  ]) {
+    assert.match(P.syncFailure([], w), /No highlights were read\..*Your last sync is kept\./);
+  }
 });

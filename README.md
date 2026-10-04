@@ -17,6 +17,8 @@ Not affiliated with Amazon. Kindle is a trademark of Amazon.com, Inc.
 
 ## Install
 
+Desktop Firefox 140 or later. Firefox for Android is not supported: it cannot save downloads from extensions.
+
 - **For testing:** open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on** and select `manifest.json`. Firefox removes it when it restarts.
 - **Permanent:** Firefox needs a signed `.xpi`. Build it with `npm run build`, then sign it as an unlisted add-on on addons.mozilla.org.
 
@@ -30,16 +32,16 @@ Not affiliated with Amazon. Kindle is a trademark of Amazon.com, Inc.
 
 ### JSON format
 
-The file has these top-level fields (`background.js:192-197`):
+The file has these top-level fields (`background.js:207-212`):
 
 - `lastUpdated`: ISO 8601 time of the sync.
 - `totalBooks`: number of books in `books`.
 - `totalHighlights`: sum of highlights over all books.
 - `books`: list of books. Books without highlights are left out.
 
-Each book has `asin`, `title`, `author`, `coverUrl`, `highlightCount`, `lastSynced` and `highlights` (`content.js:395-404`).
+Each book has `asin`, `title`, `author`, `coverUrl`, `highlightCount`, `lastSynced` and `highlights` (`content.js:348-356`).
 
-Each highlight has `id`, `text`, `note` (or `null`), `location`, `color` and `createdDate` (always `null` for now) (`parse.js:78-85`).
+Each highlight has `id`, `text`, `note` (or `null`), `location`, `color` and `createdDate` (always `null` for now) (`parse.js:102-109`).
 
 ## Permissions
 
@@ -64,6 +66,7 @@ Each highlight has `id`, `text`, `note` (or `null`), `location`, `color` and `cr
 | "The Kindle tab was closed or reloaded" | Click **Sync Highlights** again and leave the tab open |
 | "…may be incomplete: Title (120 of 150)" | Fewer highlights loaded than the count Amazon shows in the notebook. Sync again. If the numbers stay, Amazon may have changed its page |
 | "…did not load" | Sync again. If the message stays, Amazon may have changed its page |
+| "No highlights were read…" | No book loaded, so the extension kept your last sync and saved no file. Sync again. If the message stays, Amazon may have changed its page |
 | "Amazon's export limit hides some highlights…" | Normal. The publisher limits exports, so the notebook shows only part of the highlights |
 | "…without highlights left out" | Normal for books with only notes or images |
 

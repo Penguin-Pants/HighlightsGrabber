@@ -1,8 +1,30 @@
-// Pure helpers that read one highlight row or the pagination state from the
-// Kindle notebook DOM. Loaded before content.js; also required by the tests.
+// Selectors for the Kindle notebook page and pure helpers that read it.
+// Loaded before content.js; also required by the tests.
 
 var HighlightsGrabberParse = HighlightsGrabberParse || (function () {
+  // All read.amazon.com/notebook selectors. Update tests/fixtures with them.
   const SEL = {
+    // Library container: wait for this before anything else
+    library:        '#kp-notebook-library',
+    // Sidebar book list (each element's id is the book's ASIN)
+    bookItem:       '#kp-notebook-library .kp-notebook-library-each-book',
+    // Sidebar title: used for the progress label and as a title fallback
+    sidebarTitle:   ['.kp-notebook-searchable-item-name', 'h2.a-size-base', 'h2', '.a-text-bold'],
+
+    // Right panel: populated after clicking a book
+    annotationsPane: '#kp-notebook-annotations-pane',
+    panelTitle:     '#kp-notebook-annotations-pane h3.kp-notebook-metadata',
+    panelAuthor:    '#kp-notebook-annotations-pane .a-color-secondary.a-size-base',
+    panelAsin:      '#kp-notebook-asin',
+    emptyBook:      '#kp-notebook-empty',
+
+    // Highlight list and pagination
+    annotations:    '#kp-notebook-annotations',
+    scroller:       '#annotation-scroller',
+    highlightRow:   '#kp-notebook-annotations .a-row.a-spacing-base',
+    nextBtn:        '#kp-notebook-annotations-next-btn',
+
+    // Inside one highlight row
     highlightText:  ['#highlight', '.kp-notebook-highlight span'],
     note:           '#note',
     // "Yellow highlight | Page: 7" or "Orange highlight | Location: 1,693"
@@ -22,8 +44,10 @@ var HighlightsGrabberParse = HighlightsGrabberParse || (function () {
   };
 
   const COLORS = ['yellow', 'pink', 'blue', 'orange'];
+  const ASIN_RE = /^[A-Z0-9]{10}$/i;
 
-  function q(selector, parent) {
+  // First match of a selector or of the first matching selector in a list
+  function q(selector, parent = document) {
     const list = Array.isArray(selector) ? selector : [selector];
     for (const s of list) {
       const el = parent.querySelector(s);
@@ -68,7 +92,7 @@ var HighlightsGrabberParse = HighlightsGrabberParse || (function () {
   function parseRow(row) {
     const textEl = q(SEL.highlightText, row);
     const text = textEl ? textEl.textContent.trim() : '';
-    if (!text || text.length < 2) return null;
+    if (!text) return null;
 
     const noteEl   = row.querySelector(SEL.note);
     const note     = noteEl ? noteEl.textContent.trim() : '';
@@ -108,7 +132,44 @@ var HighlightsGrabberParse = HighlightsGrabberParse || (function () {
     return Boolean(el && !el.classList.contains('aok-hidden'));
   }
 
-  return { SEL, makeId, extractColor, readLocation, parseRow, hasMorePages, readHighlightCount, isExportLimited };
+  // ASIN of a sidebar book element, read before the book is opened, or null
+  function bookAsin(el) {
+    for (const value of [el.id, el.getAttribute('data-asin'), el.getAttribute('data-book-asin')]) {
+      if (value && ASIN_RE.test(value)) return value;
+    }
+    return null;
+  }
+
+  // True while fewer highlight rows are loaded than Amazon's own count.
+  // With an export limit, Amazon counts highlights it does not show.
+  function countSaysMore(expected, limited, loaded) {
+    return expected !== null && !limited && loaded < expected;
+  }
+
+  // Short text for anything the user should know about a finished sync
+  function describeWarnings(w) {
+    if (!w) return null;
+    const parts = [];
+    if (w.libraryIncomplete) parts.push('Some books may be missing from the library list.');
+    if (w.incompleteBooks.length) parts.push(`${w.incompleteBooks.length} book(s) may be incomplete: ${w.incompleteBooks.join(', ')}.`);
+    if (w.failedBooks.length) parts.push(`${w.failedBooks.length} book(s) did not load: ${w.failedBooks.join(', ')}.`);
+    if (w.limitedBooks.length) parts.push(`Amazon's export limit hides some highlights in ${w.limitedBooks.length} book(s): ${w.limitedBooks.join(', ')}.`);
+    if (w.emptyBooks) parts.push(`${w.emptyBooks} book(s) without highlights left out.`);
+    return parts.length ? parts.join(' ') : null;
+  }
+
+  // Error text when a finished sync read nothing because books did not load,
+  // so the last good sync is not replaced by an empty one. Else null.
+  function syncFailure(books, w) {
+    if (books.length) return null;
+    if (!w.failedBooks.length && !w.incompleteBooks.length && !w.libraryIncomplete) return null;
+    return `No highlights were read. ${describeWarnings(w)} Your last sync is kept. Click Sync again.`;
+  }
+
+  return {
+    SEL, q, makeId, extractColor, readLocation, parseRow, hasMorePages, readHighlightCount, isExportLimited,
+    bookAsin, countSaysMore, describeWarnings, syncFailure
+  };
 })();
 
 if (typeof module !== 'undefined') module.exports = HighlightsGrabberParse;

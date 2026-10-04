@@ -169,14 +169,22 @@ function waitForTabLoad(tabId, timeout = 30000) {
       reject(new Error('Timed out waiting for Kindle tab to load'));
     }, timeout);
 
+    function done() {
+      clearTimeout(timer);
+      browser.tabs.onUpdated.removeListener(listener);
+      resolve();
+    }
+
     function listener(id, changeInfo) {
-      if (id === tabId && changeInfo.status === 'complete') {
-        clearTimeout(timer);
-        browser.tabs.onUpdated.removeListener(listener);
-        resolve();
-      }
+      if (id === tabId && changeInfo.status === 'complete') done();
     }
     browser.tabs.onUpdated.addListener(listener);
+
+    // The tab can finish loading before the listener is added. Check the
+    // URL too, so the new tab's initial about:blank does not count.
+    browser.tabs.get(tabId).then(tab => {
+      if (tab.status === 'complete' && tab.url && tab.url.startsWith(NOTEBOOK_URL)) done();
+    }, () => {});
   });
 }
 
@@ -185,6 +193,12 @@ function waitForTabLoad(tabId, timeout = 30000) {
 // ---------------------------------------------------------------------------
 
 async function handleComplete(books, warnings) {
+  const failure = HighlightsGrabberParse.syncFailure(books, warnings);
+  if (failure) {
+    failSync(failure);
+    return;
+  }
+
   syncStatus.syncing = false;
 
   const now = new Date().toISOString();
@@ -199,7 +213,7 @@ async function handleComplete(books, warnings) {
 
   await browser.storage.local.set({ [STORAGE_KEY]: data });
 
-  syncStatus.lastWarning = describeWarnings(warnings);
+  syncStatus.lastWarning = HighlightsGrabberParse.describeWarnings(warnings);
 
   const download = await downloadJSON();
   const saved = download.ok ? ` Saved ${download.filename}.` : ` Download failed: ${download.error}`;
@@ -220,18 +234,6 @@ async function handleComplete(books, warnings) {
   });
 }
 
-// Short text for anything the user should know about a finished sync
-function describeWarnings(w) {
-  if (!w) return null;
-  const parts = [];
-  if (w.libraryIncomplete) parts.push('Some books may be missing from the library list.');
-  if (w.incompleteBooks.length) parts.push(`${w.incompleteBooks.length} book(s) may be incomplete: ${w.incompleteBooks.join(', ')}.`);
-  if (w.failedBooks.length) parts.push(`${w.failedBooks.length} book(s) did not load: ${w.failedBooks.join(', ')}.`);
-  if (w.limitedBooks && w.limitedBooks.length) parts.push(`Amazon's export limit hides some highlights in ${w.limitedBooks.length} book(s): ${w.limitedBooks.join(', ')}.`);
-  if (w.emptyBooks) parts.push(`${w.emptyBooks} book(s) without highlights left out.`);
-  return parts.length ? parts.join(' ') : null;
-}
-
 // ---------------------------------------------------------------------------
 // downloadJSON — export stored data as a dated JSON file
 // Resolves to { ok: true, filename } or { ok: false, error }.
@@ -250,15 +252,21 @@ async function downloadJSON() {
     const url  = URL.createObjectURL(blob);
     const filename = `kindle-highlights-${localDate()}.json`;
 
+    let id;
     try {
-      await browser.downloads.download({ url, filename, saveAs: false });
+      id = await browser.downloads.download({ url, filename, saveAs: false });
     } finally {
       // Revoke the object URL shortly after triggering the download
       setTimeout(() => URL.revokeObjectURL(url), 60000);
     }
 
-    syncStatus.lastFilename = filename;
-    return { ok: true, filename };
+    // Firefox adds a number when the file exists; report the name it used.
+    // The download already started, so a failed lookup keeps the requested name.
+    const [item] = await browser.downloads.search({ id }).catch(() => []);
+    const saved = item && item.filename ? item.filename.split(/[\\/]/).pop() : filename;
+
+    syncStatus.lastFilename = saved;
+    return { ok: true, filename: saved };
   } catch (err) {
     return { ok: false, error: err.message };
   }

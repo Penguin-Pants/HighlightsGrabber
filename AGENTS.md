@@ -10,7 +10,7 @@ Firefox extension. It scrapes the user's Kindle highlights from `read.amazon.com
 ## Stack
 
 - Plain JavaScript, Firefox WebExtension Manifest V2 (`manifest.json`). No build step, no bundler.
-- Min Firefox 140 desktop and 142 Android (`manifest.json`).
+- Desktop Firefox only, min 140 (`manifest.json`). Firefox for Android has no `downloads.download`, so the JSON file cannot be saved there. Keep the `gecko_android` key: `web-ext lint` warns without it (`data_collection_permissions` needs Android 142).
 - Dev tools only: `linkedom` (DOM for tests), `@resvg/resvg-js` (icon export), `web-ext` 10 (lint and build, run through `npx`) (`package.json`).
 - Tests: Node built-in test runner (`node --test`).
 - Distribution: unsigned temporary add-on or a self-signed unlisted `.xpi` (`README.md`).
@@ -32,7 +32,7 @@ Commands come from `package.json` and `README.md`. Not run. `Test (one)` is `unv
 
 - Planning docs: none found
 - Design spec: `docs/BRANDING.md` (brand rules), `README.md` (behavior and privacy)
-- Source: `background.js` (sync control and storage), `content.js` (scrape on the notebook page), `parse.js` (pure DOM helpers), `popup.html`, `popup.js`, `popup.css`, `manifest.json`
+- Source: `background.js` (sync control and storage), `content.js` (scrape on the notebook page), `parse.js` (selectors and pure helpers), `popup.html`, `popup.js`, `popup.css`, `manifest.json`
 - Tests: `tests/parse.test.js`, fixture `tests/fixtures/annotations.html`
 - Brand assets: `assets/brand/` (SVG masters, PNG exports)
 
@@ -42,8 +42,8 @@ None found. No `.env.example`. No `process.env` use in `scripts/` or the extensi
 
 ## Gotchas
 
-- `parse.js` holds the Amazon page selectors (`parse.js:5`). If Amazon changes the notebook page, the sync breaks. Update the selectors and the fixture together.
-- `parse.js` is loaded by `manifest.json` content scripts and by `tests/parse.test.js`. It ends with a `module.exports` guard (`parse.js:114`), so keep it loadable in Node.
+- `parse.js` holds all Amazon page selectors (`parse.js:6`). If Amazon changes the notebook page, the sync breaks. Update the selectors and the fixture together.
+- `parse.js` is loaded by the `manifest.json` background page and content scripts and by `tests/parse.test.js`. It ends with a `module.exports` guard (`parse.js:175`), so keep it loadable in Node. Put pure, testable logic there.
 - `npm run build` packs every file not in `webExt.ignoreFiles` (`package.json:18-19`). That list names `AGENTS.md` and `CLAUDE.md`, so both stay out of the package.
 - The saved data uses the storage key `kindleHighlights` (`background.js:1`).
 
