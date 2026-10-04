@@ -84,14 +84,19 @@ if (window.__highlightsGrabberLoaded) {
   async function openBook(el, expectedAsin, expectedTitle) {
     const prevSearch  = location.search;
     const prevPanel   = document.querySelector(SEL.panelAsin);
+    const prevTitleEl = document.querySelector(SEL.panelTitle);
     const alreadyOpen = expectedAsin && panelAsin() === expectedAsin;
     clickBook(el);
 
     if (!expectedAsin) {
-      // Without a URL change or a matching title, the panel may still show
-      // the previous book
-      return waitUntil(() => location.search !== prevSearch ||
-                             (expectedTitle && scrapePanelMeta().title === expectedTitle), 12000);
+      // Need a URL change, or a newly rendered panel with this book's title.
+      // A title match alone can be the previous book with the same title.
+      return waitUntil(() => {
+        if (location.search !== prevSearch) return true;
+        const titleEl = document.querySelector(SEL.panelTitle);
+        return Boolean(expectedTitle && titleEl && titleEl !== prevTitleEl &&
+                       titleEl.textContent.trim() === expectedTitle);
+      }, 12000);
     }
 
     if (alreadyOpen) {
