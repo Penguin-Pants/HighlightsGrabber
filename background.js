@@ -185,6 +185,12 @@ function waitForTabLoad(tabId, timeout = 30000) {
 // ---------------------------------------------------------------------------
 
 async function handleComplete(books, warnings) {
+  const failure = HighlightsGrabberParse.syncFailure(books, warnings);
+  if (failure) {
+    failSync(failure);
+    return;
+  }
+
   syncStatus.syncing = false;
 
   const now = new Date().toISOString();

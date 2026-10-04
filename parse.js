@@ -158,9 +158,17 @@ var HighlightsGrabberParse = HighlightsGrabberParse || (function () {
     return parts.length ? parts.join(' ') : null;
   }
 
+  // Error text when a finished sync read nothing because books did not load,
+  // so the last good sync is not replaced by an empty one. Else null.
+  function syncFailure(books, w) {
+    if (books.length) return null;
+    if (!w.failedBooks.length && !w.incompleteBooks.length && !w.libraryIncomplete) return null;
+    return `No highlights were read. ${describeWarnings(w)} Your last sync is kept. Click Sync again.`;
+  }
+
   return {
     SEL, q, makeId, extractColor, readLocation, parseRow, hasMorePages, readHighlightCount, isExportLimited,
-    bookAsin, countSaysMore, describeWarnings
+    bookAsin, countSaysMore, describeWarnings, syncFailure
   };
 })();
 

@@ -64,6 +64,7 @@ Each highlight has `id`, `text`, `note` (or `null`), `location`, `color` and `cr
 | "The Kindle tab was closed or reloaded" | Click **Sync Highlights** again and leave the tab open |
 | "…may be incomplete: Title (120 of 150)" | Fewer highlights loaded than the count Amazon shows in the notebook. Sync again. If the numbers stay, Amazon may have changed its page |
 | "…did not load" | Sync again. If the message stays, Amazon may have changed its page |
+| "No highlights were read…" | No book loaded, so the extension kept your last sync and saved no file. Sync again. If the message stays, Amazon may have changed its page |
 | "Amazon's export limit hides some highlights…" | Normal. The publisher limits exports, so the notebook shows only part of the highlights |
 | "…without highlights left out" | Normal for books with only notes or images |
 

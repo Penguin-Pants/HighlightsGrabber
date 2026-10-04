@@ -171,3 +171,18 @@ test("reads a sidebar book's ASIN from its id or data attributes", () => {
   assert.equal(P.bookAsin(book({ 'data-book-asin': 'B0EXAMPLE3' })), 'B0EXAMPLE3');
   assert.equal(P.bookAsin(book({ id: 'row-3', 'data-asin': 'not an asin' })), null);
 });
+
+test('a sync without highlights fails only when books did not load', () => {
+  const book = { asin: 'B0EXAMPLE1', highlights: [{ id: 'h1' }] };
+  assert.equal(P.syncFailure([book], { ...noWarnings(), failedBooks: ['B'] }), null);
+  // An account with only empty books is a valid result
+  assert.equal(P.syncFailure([], { ...noWarnings(), emptyBooks: 3 }), null);
+
+  for (const w of [
+    { ...noWarnings(), failedBooks: ['B'] },
+    { ...noWarnings(), incompleteBooks: ['C (0 of 5)'] },
+    { ...noWarnings(), libraryIncomplete: true }
+  ]) {
+    assert.match(P.syncFailure([], w), /No highlights were read\..*Your last sync is kept\./);
+  }
+});
