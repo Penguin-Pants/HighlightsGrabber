@@ -47,6 +47,7 @@ Hover on pink: `#F5528C`. Put Ink text on pink (contrast 6.9:1), never white tex
 
 - The icon is the same on light and dark backgrounds.
 - Logo: `logo.svg` on light backgrounds, `logo-on-dark.svg` on dark backgrounds. Only the wordmark color changes.
+- Popup: follows the system light or dark setting. Colors are tokens at the top of `popup.css`. Keep text at 4.5:1 contrast or more in both themes.
 
 ## Browser-extension usage
 

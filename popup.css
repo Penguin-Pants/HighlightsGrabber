@@ -4,11 +4,60 @@
   padding: 0;
 }
 
+/* Colors. Brand values come from docs/BRANDING.md. */
+:root {
+  color-scheme: light dark;
+  --bg:            #fff;
+  --text:          #1a1a1a;
+  --text-muted:    #707070;
+  --text-label:    #666;
+  --text-progress: #555;
+  --surface:       #f7f7f7;
+  --border:        #e8e8e8;
+  --divider:       #ebebeb;
+  --track:         #e8e8e8;
+  --error:         #c0392b;
+  --error-bg:      #fdf0ee;
+  --warning:       #6b4a00;
+  --warning-bg:    #fbf1dc;
+  --saved:         #2f6496;
+  --btn2:          #f0f0f0;
+  --btn2-hover:    #e2e2e2;
+  --btn2-text:     #333;
+  --pink:          #ff6fa3;
+  --pink-hover:    #f5528c;
+  --ink:           #1a1423;
+  --focus:         #3e7cb1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:            #1c1b22;
+    --text:          #fbfbfe;
+    --text-muted:    #a6a5ad;
+    --text-label:    #bfbfc9;
+    --text-progress: #cfcfd8;
+    --surface:       #2b2a33;
+    --border:        #3a3944;
+    --divider:       #3a3944;
+    --track:         #3a3944;
+    --error:         #ff9d8f;
+    --error-bg:      #3b2421;
+    --warning:       #f3d48b;
+    --warning-bg:    #3a301a;
+    --saved:         #8fc1ec;
+    --btn2:          #3a3944;
+    --btn2-hover:    #4a4955;
+    --btn2-text:     #fbfbfe;
+    --focus:         #8fc1ec;
+  }
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 13px;
-  background: #fff;
-  color: #1a1a1a;
+  background: var(--bg);
+  color: var(--text);
   min-width: 280px;
 }
 
@@ -24,7 +73,7 @@ header {
   display: flex;
   align-items: center;
   gap: 10px;
-  border-bottom: 1px solid #e8e8e8;
+  border-bottom: 1px solid var(--border);
   padding-bottom: 12px;
 }
 
@@ -36,19 +85,19 @@ header {
 h1 {
   font-size: 15px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--text);
   letter-spacing: -0.2px;
 }
 
 /* Status blocks */
 .status-block {
-  background: #f7f7f7;
+  background: var(--surface);
   border-radius: 8px;
   padding: 12px 14px;
 }
 
 .muted {
-  color: #888;
+  color: var(--text-muted);
   text-align: center;
   padding: 4px 0;
 }
@@ -61,30 +110,30 @@ h1 {
 }
 
 .stat-row + .stat-row {
-  border-top: 1px solid #ebebeb;
+  border-top: 1px solid var(--divider);
   margin-top: 4px;
   padding-top: 7px;
 }
 
 .label {
-  color: #666;
+  color: var(--text-label);
 }
 
 .value {
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--text);
 }
 
 /* Progress */
 .progress-bar-track {
-  background: #e8e8e8;
+  background: var(--track);
   border-radius: 6px;
   height: 8px;
   overflow: hidden;
 }
 
 .progress-bar-fill {
-  background: #ff6fa3;
+  background: var(--pink);
   height: 100%;
   width: 0%;
   border-radius: 6px;
@@ -93,7 +142,7 @@ h1 {
 
 .progress-text {
   margin-top: 7px;
-  color: #555;
+  color: var(--text-progress);
   font-size: 12px;
   white-space: nowrap;
   overflow: hidden;
@@ -102,9 +151,9 @@ h1 {
 
 /* Error */
 .error-text {
-  color: #c0392b;
+  color: var(--error);
   font-size: 12px;
-  background: #fdf0ee;
+  background: var(--error-bg);
   border-radius: 6px;
   padding: 10px 12px;
   line-height: 1.4;
@@ -112,22 +161,22 @@ h1 {
 
 /* Warning and download result */
 .warning-text {
-  color: #6b4a00;
+  color: var(--warning);
   font-size: 12px;
-  background: #fbf1dc;
+  background: var(--warning-bg);
   border-radius: 6px;
   padding: 10px 12px;
   line-height: 1.4;
 }
 
 .saved-text {
-  color: #2f6496;
+  color: var(--saved);
   font-size: 12px;
   overflow-wrap: anywhere;
 }
 
 .saved-text.error {
-  color: #c0392b;
+  color: var(--error);
 }
 
 /* Buttons */
@@ -149,7 +198,7 @@ h1 {
 }
 
 .btn:focus-visible {
-  outline: 2px solid #3e7cb1;
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 
@@ -159,21 +208,21 @@ h1 {
 }
 
 .btn-primary {
-  background: #ff6fa3;
-  color: #1a1423;
+  background: var(--pink);
+  color: var(--ink);
 }
 
 .btn-primary:not(:disabled):hover {
-  background: #f5528c;
+  background: var(--pink-hover);
 }
 
 .btn-secondary {
-  background: #f0f0f0;
-  color: #333;
+  background: var(--btn2);
+  color: var(--btn2-text);
 }
 
 .btn-secondary:not(:disabled):hover {
-  background: #e2e2e2;
+  background: var(--btn2-hover);
 }
 
 .hidden {
