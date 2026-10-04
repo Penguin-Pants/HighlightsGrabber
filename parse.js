@@ -92,7 +92,7 @@ var HighlightsGrabberParse = HighlightsGrabberParse || (function () {
   function parseRow(row) {
     const textEl = q(SEL.highlightText, row);
     const text = textEl ? textEl.textContent.trim() : '';
-    if (!text || text.length < 2) return null;
+    if (!text) return null;
 
     const noteEl   = row.querySelector(SEL.note);
     const note     = noteEl ? noteEl.textContent.trim() : '';

@@ -47,11 +47,17 @@ test('skips rows without highlight text', () => {
   assert.equal(P.parseRow(doc.getElementById('ROW-IMAGE')), null);
 });
 
+test('keeps a one-character highlight', () => {
+  const h = P.parseRow(load().getElementById('ROW-ONE-CHAR'));
+  assert.equal(h && h.text, '愛');
+  assert.equal(h.location, 'Location 40');
+});
+
 test('makes a stable id for rows without one', () => {
   const doc = load();
   const noId = rows(doc).find(r => !r.id);
   const a = P.parseRow(noId);
-  const b = P.parseRow(load().querySelectorAll('#kp-notebook-annotations .a-row.a-spacing-base')[5]);
+  const b = P.parseRow(rows(load()).find(r => !r.id));
   assert.match(a.id, /^h[0-9a-z]+$/);
   assert.equal(a.id, b.id);
   assert.equal(a.color, 'pink');
@@ -65,7 +71,7 @@ test('gives long highlights with the same opening words different ids', () => {
 
 test('parses all rows of the fixture', () => {
   const list = rows(load()).map(P.parseRow).filter(Boolean);
-  assert.equal(list.length, 4);
+  assert.equal(list.length, 5);
   assert.ok(list.every(h => h.text && h.location));
 });
 
