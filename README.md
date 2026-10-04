@@ -17,6 +17,8 @@ Not affiliated with Amazon. Kindle is a trademark of Amazon.com, Inc.
 
 ## Install
 
+Desktop Firefox 140 or later. Firefox for Android is not supported: it cannot save downloads from extensions.
+
 - **For testing:** open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on** and select `manifest.json`. Firefox removes it when it restarts.
 - **Permanent:** Firefox needs a signed `.xpi`. Build it with `npm run build`, then sign it as an unlisted add-on on addons.mozilla.org.
 

@@ -10,7 +10,7 @@ Firefox extension. It scrapes the user's Kindle highlights from `read.amazon.com
 ## Stack
 
 - Plain JavaScript, Firefox WebExtension Manifest V2 (`manifest.json`). No build step, no bundler.
-- Min Firefox 140 desktop and 142 Android (`manifest.json`).
+- Desktop Firefox only, min 140 (`manifest.json`). Firefox for Android has no `downloads.download`, so the JSON file cannot be saved there. Keep the `gecko_android` key: `web-ext lint` warns without it (`data_collection_permissions` needs Android 142).
 - Dev tools only: `linkedom` (DOM for tests), `@resvg/resvg-js` (icon export), `web-ext` 10 (lint and build, run through `npx`) (`package.json`).
 - Tests: Node built-in test runner (`node --test`).
 - Distribution: unsigned temporary add-on or a self-signed unlisted `.xpi` (`README.md`).
