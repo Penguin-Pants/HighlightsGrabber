@@ -169,14 +169,22 @@ function waitForTabLoad(tabId, timeout = 30000) {
       reject(new Error('Timed out waiting for Kindle tab to load'));
     }, timeout);
 
+    function done() {
+      clearTimeout(timer);
+      browser.tabs.onUpdated.removeListener(listener);
+      resolve();
+    }
+
     function listener(id, changeInfo) {
-      if (id === tabId && changeInfo.status === 'complete') {
-        clearTimeout(timer);
-        browser.tabs.onUpdated.removeListener(listener);
-        resolve();
-      }
+      if (id === tabId && changeInfo.status === 'complete') done();
     }
     browser.tabs.onUpdated.addListener(listener);
+
+    // The tab can finish loading before the listener is added. Check the
+    // URL too, so the new tab's initial about:blank does not count.
+    browser.tabs.get(tabId).then(tab => {
+      if (tab.status === 'complete' && tab.url && tab.url.startsWith(NOTEBOOK_URL)) done();
+    }, () => {});
   });
 }
 
