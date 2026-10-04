@@ -37,22 +37,22 @@
 
     <!-- In-progress -->
     <div id="progress-section" class="hidden">
-      <div class="progress-bar-track">
+      <div id="progress-bar" class="progress-bar-track" role="progressbar" aria-label="Sync progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <div id="progress-fill" class="progress-bar-fill"></div>
       </div>
-      <p id="progress-text" class="progress-text">Starting…</p>
+      <p id="progress-text" class="progress-text" aria-live="polite">Starting…</p>
     </div>
 
     <!-- Error -->
-    <div id="error-section" class="hidden">
+    <div id="error-section" class="hidden" role="alert">
       <p id="error-text" class="error-text"></p>
     </div>
 
     <!-- Warning (sync finished, but something needs attention) -->
-    <p id="warning-text" class="warning-text hidden"></p>
+    <p id="warning-text" class="warning-text hidden" role="status"></p>
 
     <!-- Download result -->
-    <p id="saved-text" class="saved-text hidden"></p>
+    <p id="saved-text" class="saved-text hidden" role="status"></p>
 
     <!-- Actions -->
     <div class="actions">
