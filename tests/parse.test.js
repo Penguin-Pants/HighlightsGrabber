@@ -129,3 +129,33 @@ test('q returns the first selector in a list that matches', () => {
   assert.equal(P.q(['#missing', '#ROW-LOC', '#ROW-PAGE'], doc).id, 'ROW-LOC');
   assert.equal(P.q(['#missing', '#also-missing'], doc), null);
 });
+
+test('the highlight count asks for more rows only without an export limit', () => {
+  assert.equal(P.countSaysMore(150, false, 120), true);
+  assert.equal(P.countSaysMore(150, false, 150), false);
+  assert.equal(P.countSaysMore(150, true, 120), false);
+  assert.equal(P.countSaysMore(null, false, 0), false);
+});
+
+const noWarnings = () => ({ emptyBooks: 0, incompleteBooks: [], failedBooks: [], limitedBooks: [], libraryIncomplete: false });
+
+test('describes no warnings as null', () => {
+  assert.equal(P.describeWarnings(null), null);
+  assert.equal(P.describeWarnings(noWarnings()), null);
+});
+
+test('describes each kind of warning', () => {
+  const w = {
+    emptyBooks: 2,
+    incompleteBooks: ['A (1 of 3)'],
+    failedBooks: ['B'],
+    limitedBooks: ['C'],
+    libraryIncomplete: true
+  };
+  assert.equal(P.describeWarnings(w),
+    'Some books may be missing from the library list. ' +
+    '1 book(s) may be incomplete: A (1 of 3). ' +
+    '1 book(s) did not load: B. ' +
+    "Amazon's export limit hides some highlights in 1 book(s): C. " +
+    '2 book(s) without highlights left out.');
+});

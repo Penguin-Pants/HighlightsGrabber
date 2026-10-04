@@ -10,7 +10,7 @@
     "https://read.amazon.com/*"
   ],
   "background": {
-    "scripts": ["background.js"],
+    "scripts": ["parse.js", "background.js"],
     "persistent": true
   },
   "browser_action": {

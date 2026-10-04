@@ -5,7 +5,7 @@ if (window.__highlightsGrabberLoaded) {
 
 (function () {
   const log = (...a) => console.log('[HighlightsGrabber]', ...a);
-  const { SEL, q, parseRow, hasMorePages, readHighlightCount, isExportLimited, makeId, readLocation } = HighlightsGrabberParse;
+  const { SEL, q, parseRow, countSaysMore, hasMorePages, readHighlightCount, isExportLimited, makeId, readLocation } = HighlightsGrabberParse;
 
   const ASIN_RE = /^[A-Z0-9]{10}$/i;
   const MAX_PAGES = 200;
@@ -234,7 +234,7 @@ if (window.__highlightsGrabberLoaded) {
 
       const annotations = document.querySelector(SEL.annotations);
       const more = hasMorePages(annotations, SEL.annotationsNextToken) ||
-                   (expected !== null && !limited && highlightRows.size < expected);
+                   countSaysMore(expected, limited, highlightRows.size);
 
       // A load attempt changed no rows and added nothing new: stop.
       // (A page can load but hold only notes or images, so check both.)
