@@ -13,7 +13,7 @@ function load(markup = html) {
 }
 
 function rows(doc) {
-  return Array.from(doc.querySelectorAll('#kp-notebook-annotations .a-row.a-spacing-base'));
+  return Array.from(doc.querySelectorAll(P.SEL.highlightRow));
 }
 
 test('parses a page-based highlight', () => {
@@ -114,4 +114,18 @@ test('every file the manifest references exists', () => {
   ];
   for (const f of files) assert.ok(fs.existsSync(path.join(root, f)), `missing ${f}`);
   assert.ok(!m.permissions.includes('tabs'));
+});
+
+test('finds the book panel header with the panel selectors', () => {
+  const doc = load();
+  assert.equal(P.q(P.SEL.panelTitle, doc).textContent.trim(), 'Example Book');
+  assert.equal(P.q(P.SEL.panelAuthor, doc).textContent.trim(), 'Example Author');
+  assert.equal(P.q(P.SEL.panelAsin, doc).getAttribute('value'), 'B0EXAMPLE1');
+  assert.equal(P.q(P.SEL.emptyBook, doc), null);
+});
+
+test('q returns the first selector in a list that matches', () => {
+  const doc = load();
+  assert.equal(P.q(['#missing', '#ROW-LOC', '#ROW-PAGE'], doc).id, 'ROW-LOC');
+  assert.equal(P.q(['#missing', '#also-missing'], doc), null);
 });

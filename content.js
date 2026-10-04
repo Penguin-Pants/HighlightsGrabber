@@ -5,41 +5,7 @@ if (window.__highlightsGrabberLoaded) {
 
 (function () {
   const log = (...a) => console.log('[HighlightsGrabber]', ...a);
-  const { parseRow, hasMorePages, readHighlightCount, isExportLimited, makeId, readLocation } = HighlightsGrabberParse;
-  const PSEL = HighlightsGrabberParse.SEL;
-
-  // ---------------------------------------------------------------------------
-  // Stable selectors from read.amazon.com/notebook
-  // ---------------------------------------------------------------------------
-
-  const SEL = {
-    // Library container — wait for this before anything else
-    library:          '#kp-notebook-library',
-
-    // Sidebar book list (each element's id is the book's ASIN)
-    bookItem:         '#kp-notebook-library .kp-notebook-library-each-book',
-
-    // Right panel — populated after clicking a book
-    panelTitle:       '#kp-notebook-annotations-pane h3.kp-notebook-metadata',
-    panelAuthor:      '#kp-notebook-annotations-pane .a-color-secondary.a-size-base',
-    panelAsin:        '#kp-notebook-asin',
-
-    // Highlight pagination
-    annotationsPane:  '#kp-notebook-annotations-pane',
-    annotations:      '#kp-notebook-annotations',
-    scroller:         '#annotation-scroller',
-    highlightRow:     '#kp-notebook-annotations .a-row.a-spacing-base',
-    nextBtn:          '#kp-notebook-annotations-next-btn',
-    emptyBook:        '#kp-notebook-empty',
-
-    // Sidebar title — used for the progress label and as a title fallback
-    sidebarTitle:     [
-      '.kp-notebook-searchable-item-name',
-      'h2.a-size-base',
-      'h2',
-      '.a-text-bold'
-    ]
-  };
+  const { SEL, q, parseRow, hasMorePages, readHighlightCount, isExportLimited, makeId, readLocation } = HighlightsGrabberParse;
 
   const ASIN_RE = /^[A-Z0-9]{10}$/i;
   const MAX_PAGES = 200;
@@ -47,17 +13,6 @@ if (window.__highlightsGrabberLoaded) {
   // ---------------------------------------------------------------------------
   // DOM helpers
   // ---------------------------------------------------------------------------
-
-  function q(selector, parent = document) {
-    if (Array.isArray(selector)) {
-      for (const s of selector) {
-        const el = parent.querySelector(s);
-        if (el) return el;
-      }
-      return null;
-    }
-    return parent.querySelector(selector);
-  }
 
   function qAll(selector, parent = document) {
     return Array.from(parent.querySelectorAll(selector));
@@ -162,7 +117,7 @@ if (window.__highlightsGrabberLoaded) {
   async function loadFullLibrary() {
     const library = document.querySelector(SEL.library);
     for (let i = 0; i < MAX_PAGES; i++) {
-      if (!hasMorePages(library, PSEL.libraryNextToken)) return true;
+      if (!hasMorePages(library, SEL.libraryNextToken)) return true;
       const books = qAll(SEL.bookItem);
       if (!books.length) return false;
       books[books.length - 1].scrollIntoView({ block: 'end' });
@@ -270,7 +225,7 @@ if (window.__highlightsGrabberLoaded) {
         if (h && !byId.has(h.id)) byId.set(h.id, h);
         // Same identity as the exported id; rows without text (images) use
         // the full row text and location
-        if (row.querySelector(PSEL.highlightBox)) {
+        if (row.querySelector(SEL.highlightBox)) {
           highlightRows.add(h ? h.id : (row.id || makeId(row.textContent.trim(), readLocation(row))));
         }
       }
@@ -278,7 +233,7 @@ if (window.__highlightsGrabberLoaded) {
           (expected === null ? ')' : `, Amazon shows ${expected})`));
 
       const annotations = document.querySelector(SEL.annotations);
-      const more = hasMorePages(annotations, PSEL.annotationsNextToken) ||
+      const more = hasMorePages(annotations, SEL.annotationsNextToken) ||
                    (expected !== null && !limited && highlightRows.size < expected);
 
       // A load attempt changed no rows and added nothing new: stop.
