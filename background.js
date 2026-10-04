@@ -260,8 +260,9 @@ async function downloadJSON() {
       setTimeout(() => URL.revokeObjectURL(url), 60000);
     }
 
-    // Firefox adds a number when the file exists; report the name it used
-    const [item] = await browser.downloads.search({ id });
+    // Firefox adds a number when the file exists; report the name it used.
+    // The download already started, so a failed lookup keeps the requested name.
+    const [item] = await browser.downloads.search({ id }).catch(() => []);
     const saved = item && item.filename ? item.filename.split(/[\\/]/).pop() : filename;
 
     syncStatus.lastFilename = saved;
