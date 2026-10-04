@@ -30,16 +30,16 @@ Not affiliated with Amazon. Kindle is a trademark of Amazon.com, Inc.
 
 ### JSON format
 
-The file has these top-level fields (`background.js:192-197`):
+The file has these top-level fields (`background.js:207-212`):
 
 - `lastUpdated`: ISO 8601 time of the sync.
 - `totalBooks`: number of books in `books`.
 - `totalHighlights`: sum of highlights over all books.
 - `books`: list of books. Books without highlights are left out.
 
-Each book has `asin`, `title`, `author`, `coverUrl`, `highlightCount`, `lastSynced` and `highlights` (`content.js:395-404`).
+Each book has `asin`, `title`, `author`, `coverUrl`, `highlightCount`, `lastSynced` and `highlights` (`content.js:348-356`).
 
-Each highlight has `id`, `text`, `note` (or `null`), `location`, `color` and `createdDate` (always `null` for now) (`parse.js:78-85`).
+Each highlight has `id`, `text`, `note` (or `null`), `location`, `color` and `createdDate` (always `null` for now) (`parse.js:102-109`).
 
 ## Permissions
 
